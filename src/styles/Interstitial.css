@@ -1,3 +1,8 @@
+@keyframes fadeUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
 .interstitial {
   display: flex;
   flex-direction: column;
@@ -7,6 +12,7 @@
   padding: 64px 40px;
   gap: 20px;
   min-height: 380px;
+  animation: fadeUp 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .interstitial-eyebrow {
@@ -18,7 +24,7 @@
 }
 
 .interstitial-divider {
-  width: 28px;
+  width: 32px;
   height: 1px;
   background: var(--rule);
 }
@@ -47,7 +53,18 @@
   color: var(--bg);
   background: var(--ink);
   border: none;
+  border-radius: 2px;
   padding: 13px 32px;
   cursor: pointer;
   margin-top: 8px;
+  transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.interstitial-begin:hover {
+  background-color: #333333;
+}
+
+.interstitial-begin:active {
+  transform: scale(0.98);
 }
