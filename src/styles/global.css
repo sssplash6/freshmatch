@@ -5,13 +5,14 @@
 }
 
 :root {
-  --bg: #faf9f7;
-  --bg-outer: #f0ece3;
-  --ink: #1a1a1a;
-  --muted: #6b6560;
-  --faint: #b0a89e;
-  --rule: #ede9e2;
-  --font-serif: 'Georgia', 'Times New Roman', serif;
+  --bg: #ffffff;
+  --bg-outer: #ffffff;
+  --ink: #111111;
+  --muted: #666666;
+  --faint: #aaaaaa;
+  --rule: #e8e8e8;
+  --selected-bg: oklch(96.5% 0 0);
+  --font-serif: 'Libre Baskerville', Georgia, serif;
   --font-sans: system-ui, -apple-system, sans-serif;
 }
 
@@ -20,7 +21,7 @@ html, body, #root {
 }
 
 body {
-  background: var(--bg-outer);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
@@ -38,9 +39,14 @@ body {
   width: 100%;
   max-width: 480px;
   background: var(--bg);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
