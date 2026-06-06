@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Design Review v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f0f0f0; color: #111; padding: 32px 24px 80px; }
+h1 { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+.subtitle { font-size: 13px; color: #666; margin-bottom: 32px; }
+.section-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin: 40px 0 14px; border-top: 1px solid #ddd; padding-top: 16px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.mono-col { max-width: 360px; }
+.lbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 10px; }
+.tag { display: inline-block; font-size: 9px; background: #111; color: #fff; padding: 2px 7px; border-radius: 2px; margin-left: 6px; vertical-align: middle; }
+.tag.yellow { background: #b8860b; }
+.change-list { font-size: 12px; color: #555; line-height: 2.1; margin-top: 10px; list-style: none; }
+.change-list li::before { content: '→ '; color: #999; }
+
+/* ── Shared quiz chrome ── */
+.quiz { background: #ffffff; max-width: 420px; }
+.quiz .prog { height: 3px; background: #ebebeb; }
+.quiz .prog-fill { height: 100%; background: #111; }
+.quiz .hdr { display: flex; justify-content: space-between; padding: 22px 28px 0; }
+.quiz .hdr span { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #aaa; }
+.quiz .qtext { padding: 22px 28px 0; font-family: 'Libre Baskerville', Georgia, serif; font-size: 17px; color: #111; line-height: 1.55; }
+.quiz .opts { padding: 20px 28px 0; }
+.quiz .ftr { display: flex; justify-content: flex-end; padding: 18px 28px 28px; }
+.quiz .btn { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; background: #111; color: #fff; border: none; padding: 11px 24px; border-radius: 2px; }
+
+/* ── OLD selection: just color ── */
+.old-opt { display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid #e8e8e8; }
+.old-opt:last-child { border-bottom: 1px solid #e8e8e8; }
+.old-opt .ltr { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #aaa; min-width: 10px; }
+.old-opt .txt { font-size: 11px; color: #777; line-height: 1.5; }
+.old-opt.sel .ltr, .old-opt.sel .txt { color: #111; }
+.old-opt.dim .ltr, .old-opt.dim .txt { color: #ddd; }
+
+/* ── NEW selection: tinted row + weight ── */
+.new-opt { display: flex; gap: 12px; align-items: baseline; padding: 10px 4px; border-top: 1px solid #e8e8e8; margin: 0 -4px; border-radius: 2px; }
+.new-opt:last-child { border-bottom: 1px solid #e8e8e8; margin-bottom: 0; }
+.new-opt .ltr { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #aaa; min-width: 10px; transition: color 200ms cubic-bezier(0.22,1,0.36,1); }
+.new-opt .txt { font-size: 11px; color: #777; line-height: 1.5; transition: color 200ms cubic-bezier(0.22,1,0.36,1), font-weight 0ms; }
+.new-opt.sel { background: oklch(96.5% 0 0); border-radius: 3px; border-top-color: transparent; border-bottom-color: transparent !important; }
+.new-opt.sel .ltr { color: #111; font-weight: 600; }
+.new-opt.sel .txt { color: #111; font-weight: 500; }
+.new-opt.dim .ltr, .new-opt.dim .txt { color: #ddd; }
+/* Separator below selected row */
+.new-opt.sel + .new-opt { border-top-color: transparent; }
+
+/* Animation demo box */
+.anim-box { background: #fff; padding: 24px 28px; border-radius: 6px; border: 1px solid #e8e8e8; }
+.anim-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.anim-row:last-child { border-bottom: none; }
+.anim-label { font-size: 12px; color: #333; }
+.anim-spec { font-family: monospace; font-size: 11px; color: #888; }
+.anim-spec strong { color: #111; }
+</style>
+</head>
+<body>
+
+<h1>Design Review — v3</h1>
+<h2>Selection State + Motion</h2>
+<p class="subtitle">Two updates from design review: fixed the selection indicator, added a motion spec.</p>
+
+<div class="section-title">Selection indicator <span class="tag yellow">changed</span></div>
+<p style="font-size:12px;color:#666;margin-bottom:16px;max-width:560px;">The left-stripe border is a known anti-pattern (draws attention to the border, not the content). Replaced with a full-row tinted background + weight change — cleaner and more editorial.</p>
+<div class="split">
+  <div>
+    <div class="lbl">Before — left stripe (dropped)</div>
+    <div class="quiz">
+      <div class="prog"><div class="prog-fill" style="width:33%"></div></div>
+      <div class="hdr"><span>Section 1 — Portfolio</span><span>2 / 4</span></div>
+      <div class="qtext">What type of school did you attend?</div>
+      <div class="opts">
+        <div class="old-opt dim"><span class="ltr">A</span><span class="txt">Competitive school with IB or A-levels</span></div>
+        <div class="old-opt sel" style="padding-left:10px;border-left:2px solid #111;margin-left:-2px;"><span class="ltr">B</span><span class="txt">Well-known Lyceum or local school</span></div>
+        <div class="old-opt dim"><span class="ltr">C</span><span class="txt">Specialized school in arts or STEM</span></div>
+        <div class="old-opt dim"><span class="ltr">D</span><span class="txt">Standard public or private school</span></div>
+      </div>
+      <div class="ftr"><button class="btn">Continue →</button></div>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">After — tinted row</div>
+    <div class="quiz">
+      <div class="prog"><div class="prog-fill" style="width:33%"></div></div>
+      <div class="hdr"><span>Section 1 — Portfolio</span><span>2 / 4</span></div>
+      <div class="qtext">What type of school did you attend?</div>
+      <div class="opts">
+        <div class="new-opt dim"><span class="ltr">A</span><span class="txt">Competitive school with IB or A-levels</span></div>
+        <div class="new-opt sel"><span class="ltr">B</span><span class="txt">Well-known Lyceum or local school</span></div>
+        <div class="new-opt dim"><span class="ltr">C</span><span class="txt">Specialized school in arts or STEM</span></div>
+        <div class="new-opt dim"><span class="ltr">D</span><span class="txt">Standard public or private school</span></div>
+      </div>
+      <div class="ftr"><button class="btn">Continue →</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Motion spec <span class="tag">new</span></div>
+<p style="font-size:12px;color:#666;margin-bottom:16px;max-width:560px;">Product register: motion conveys state, not personality. All durations 150–280ms. Ease-out-expo throughout. No bounce, no elastic, no choreography on load.</p>
+
+<div class="anim-box mono-col" style="max-width:520px;">
+  <div class="anim-row">
+    <span class="anim-label">Question slide (forward)</span>
+    <span class="anim-spec"><strong>280ms</strong> translateX(32px→0) + opacity — ease-out-expo</span>
+  </div>
+  <div class="anim-row">
+    <span class="anim-label">Question slide (back)</span>
+    <span class="anim-spec"><strong>280ms</strong> translateX(-32px→0) + opacity — ease-out-expo</span>
+  </div>
+  <div class="anim-row">
+    <span class="anim-label">Option selection (color + bg)</span>
+    <span class="anim-spec"><strong>180ms</strong> color, background-color — ease-out-quint</span>
+  </div>
+  <div class="anim-row">
+    <span class="anim-label">Option dimming</span>
+    <span class="anim-spec"><strong>180ms</strong> color — ease-out-quint</span>
+  </div>
+  <div class="anim-row">
+    <span class="anim-label">Continue button (enable)</span>
+    <span class="anim-spec"><strong>200ms</strong> opacity (0.2→1) — ease-out-quint</span>
+  </div>
+  <div class="anim-row">
+    <span class="anim-label">Progress bar fill</span>
+    <span class="anim-spec"><strong>500ms</strong> width — ease-out-expo</span>
+  </div>
+  <div class="anim-row">
+    <span class="anim-label">Phase enter (Interstitial, Results)</span>
+    <span class="anim-spec"><strong>320ms</strong> opacity + translateY(12px→0) — ease-out-expo</span>
+  </div>
+  <div class="anim-row" style="border-top:1px solid #eee;margin-top:8px;padding-top:14px;">
+    <span class="anim-label" style="color:#888;font-size:11px;">prefers-reduced-motion</span>
+    <span class="anim-spec" style="color:#aaa;">all durations → 0.01ms, transforms skipped</span>
+  </div>
+</div>
+
+<div style="margin-top:32px;padding:20px 24px;background:#fff;border-radius:6px;border:1px solid #e8e8e8;max-width:520px;">
+  <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:10px;">Complete change list for implementation</div>
+  <ul class="change-list">
+    <li>background: #faf9f7 + outer bg → white, body bg white</li>
+    <li>Remove .card border-radius and box-shadow entirely</li>
+    <li>Load Libre Baskerville from Google Fonts</li>
+    <li>Question text: Georgia → Libre Baskerville</li>
+    <li>Selection: left-border → tinted row (oklch 96.5%) + font-weight</li>
+    <li>Option transitions: 0.2s linear → 180ms ease-out-quint</li>
+    <li>Slide animation: 350ms cubic-bezier(0.4,0,0.2,1) → 280ms ease-out-expo</li>
+    <li>Slide translate: 40px → 32px (less theatrical)</li>
+    <li>Phase transitions (Interstitial, Results): slide → fade + lift (translateY 12px)</li>
+    <li>Progress bar: 2px → 3px, upgrade easing to ease-out-expo</li>
+    <li>Continue button: 0.25s → 200ms ease-out-quint, add border-radius: 2px</li>
+    <li>Results title: Georgia 26px → Libre Baskerville bold 26px</li>
+    <li>Add prefers-reduced-motion override</li>
+  </ul>
+</div>
+
+</body>
+</html>

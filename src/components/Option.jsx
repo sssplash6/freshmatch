@@ -4,9 +4,9 @@ export default function Option({ letter, text, selected, dimmed, onClick }) {
   if (dimmed) className += ' dimmed'
 
   return (
-    <div className={className} onClick={onClick}>
+    <button type="button" className={className} onClick={onClick}>
       <span className="option-letter">{letter}</span>
       <span className="option-text">{text}</span>
-    </div>
+    </button>
   )
 }

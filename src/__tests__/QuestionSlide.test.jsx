@@ -13,109 +13,79 @@ const question = {
   ],
 }
 
+const baseProps = {
+  question,
+  selectedLetter: null,
+  onSelect: () => {},
+  onNext: () => {},
+  onBack: () => {},
+  showBack: false,
+  direction: 'forward',
+  sectionLabel: 'Section 1',
+  counter: '1 / 14',
+}
+
+const renderSlide = (props = {}) => render(<QuestionSlide {...baseProps} {...props} />)
+
 describe('QuestionSlide', () => {
   it('renders question text', () => {
-    render(
-      <QuestionSlide
-        question={question}
-        selectedLetter={null}
-        onSelect={() => {}}
-        onNext={() => {}}
-        onBack={() => {}}
-        showBack={true}
-        direction="forward"
-        sectionLabel="Section 1"
-        counter="1 / 4"
-      />
-    )
+    renderSlide({ showBack: true })
     expect(screen.getByText('What type of school did you attend?')).toBeInTheDocument()
   })
 
   it('renders all 4 options', () => {
-    render(
-      <QuestionSlide
-        question={question}
-        selectedLetter={null}
-        onSelect={() => {}}
-        onNext={() => {}}
-        onBack={() => {}}
-        showBack={false}
-        direction="forward"
-        sectionLabel="Section 1"
-        counter="1 / 4"
-      />
-    )
+    renderSlide()
     expect(screen.getByText('International curricula')).toBeInTheDocument()
     expect(screen.getByText('Standard school')).toBeInTheDocument()
   })
 
   it('calls onSelect with letter when option clicked', () => {
     const onSelect = vi.fn()
-    render(
-      <QuestionSlide
-        question={question}
-        selectedLetter={null}
-        onSelect={onSelect}
-        onNext={() => {}}
-        onBack={() => {}}
-        showBack={false}
-        direction="forward"
-        sectionLabel="Section 1"
-        counter="1 / 4"
-      />
-    )
+    renderSlide({ onSelect })
     fireEvent.click(screen.getByText('Local school'))
     expect(onSelect).toHaveBeenCalledWith('B')
   })
 
-  it('Continue button is disabled when no option selected', () => {
-    render(
-      <QuestionSlide
-        question={question}
-        selectedLetter={null}
-        onSelect={() => {}}
-        onNext={() => {}}
-        onBack={() => {}}
-        showBack={false}
-        direction="forward"
-        sectionLabel="Section 1"
-        counter="1 / 4"
-      />
-    )
-    expect(screen.getByText('Continue →')).not.toHaveClass('active')
+  it('auto-advances after selecting on a non-final question', () => {
+    vi.useFakeTimers()
+    const onNext = vi.fn()
+    renderSlide({ onNext })
+    fireEvent.click(screen.getByText('Local school'))
+    expect(onNext).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(750)
+    expect(onNext).toHaveBeenCalledOnce()
+    vi.useRealTimers()
   })
 
-  it('Continue button is active when option is selected', () => {
-    render(
-      <QuestionSlide
-        question={question}
-        selectedLetter="A"
-        onSelect={() => {}}
-        onNext={() => {}}
-        onBack={() => {}}
-        showBack={false}
-        direction="forward"
-        sectionLabel="Section 1"
-        counter="1 / 4"
-      />
-    )
-    expect(screen.getByText('Continue →')).toHaveClass('active')
+  it('does not auto-advance on the final question', () => {
+    vi.useFakeTimers()
+    const onNext = vi.fn()
+    renderSlide({ onNext, isFinal: true })
+    fireEvent.click(screen.getByText('Local school'))
+    vi.advanceTimersByTime(600)
+    expect(onNext).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
+  it('shows the results button only on the final question', () => {
+    const { rerender } = renderSlide()
+    expect(screen.queryByText('See your results →')).not.toBeInTheDocument()
+    rerender(<QuestionSlide {...baseProps} isFinal />)
+    expect(screen.getByText('See your results →')).toBeInTheDocument()
+  })
+
+  it('results button is inactive until an option is selected', () => {
+    renderSlide({ isFinal: true })
+    expect(screen.getByText('See your results →')).not.toHaveClass('active')
+  })
+
+  it('results button is active when an option is selected', () => {
+    renderSlide({ isFinal: true, selectedLetter: 'A' })
+    expect(screen.getByText('See your results →')).toHaveClass('active')
   })
 
   it('hides Back button when showBack is false', () => {
-    render(
-      <QuestionSlide
-        question={question}
-        selectedLetter={null}
-        onSelect={() => {}}
-        onNext={() => {}}
-        onBack={() => {}}
-        showBack={false}
-        direction="forward"
-        sectionLabel="Section 1"
-        counter="1 / 4"
-      />
-    )
+    renderSlide()
     expect(screen.queryByText('← Back')).not.toBeInTheDocument()
   })
 })

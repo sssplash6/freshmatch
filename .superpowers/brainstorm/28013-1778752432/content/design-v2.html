@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Design Review v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f0f0f0; color: #111; padding: 32px 24px 64px; }
+h1 { font-family: system-ui; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+.subtitle { font-size: 14px; color: #666; margin-bottom: 36px; }
+.section-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin: 40px 0 16px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 10px; }
+.change-tag { display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; background: #111; color: #fff; padding: 2px 6px; border-radius: 2px; margin-left: 6px; vertical-align: middle; }
+.change-list { font-size: 12px; color: #555; line-height: 2; margin-top: 8px; list-style: none; }
+.change-list li::before { content: '→ '; color: #999; }
+
+/* ── OLD: floating card ── */
+.old-wrap { background: #f0ece3; padding: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.old-card { background: #faf9f7; border-radius: 10px; overflow: hidden; box-shadow: 0 16px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06); width: 100%; }
+.old-card .progress { height: 2px; background: #ede9e2; }
+.old-card .progress-fill { height: 100%; width: 33%; background: #1a1a1a; }
+.old-card .header { display: flex; justify-content: space-between; padding: 18px 24px 0; }
+.old-card .header span { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #b0a89e; }
+.old-card .question { padding: 18px 24px 0; font-family: Georgia, serif; font-size: 17px; color: #1a1a1a; line-height: 1.5; }
+.old-card .options { padding: 18px 24px 0; }
+.old-card .opt { display: flex; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid #ede9e2; }
+.old-card .opt:last-child { border-bottom: 1px solid #ede9e2; }
+.old-card .opt .ltr { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #b0a89e; min-width: 10px; }
+.old-card .opt .txt { font-size: 11px; color: #6b6560; line-height: 1.5; }
+.old-card .opt.sel .ltr, .old-card .opt.sel .txt { color: #1a1a1a; }
+.old-card .opt.dim .ltr, .old-card .opt.dim .txt { color: #ede9e2; }
+.old-card .footer { display: flex; justify-content: flex-end; padding: 18px 24px 24px; }
+.old-card .btn { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #1a1a1a; color: #faf9f7; border: none; padding: 10px 22px; }
+
+/* ── NEW: no card, just white ── */
+.new-wrap { background: #ffffff; border-radius: 6px; overflow: hidden; }
+.new-wrap .progress { height: 3px; background: #ebebeb; }
+.new-wrap .progress-fill { height: 100%; width: 33%; background: #111; }
+.new-wrap .header { display: flex; justify-content: space-between; padding: 24px 32px 0; }
+.new-wrap .header span { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #aaa; }
+.new-wrap .question { padding: 24px 32px 0; font-family: 'Libre Baskerville', Georgia, serif; font-size: 18px; color: #111; line-height: 1.55; }
+.new-wrap .options { padding: 22px 32px 0; }
+.new-wrap .opt { display: flex; gap: 14px; align-items: baseline; padding: 11px 0 11px 10px; border-top: 1px solid #e8e8e8; position: relative; margin: 0 -10px; }
+.new-wrap .opt:last-child { border-bottom: 1px solid #e8e8e8; }
+.new-wrap .opt .ltr { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #aaa; min-width: 10px; }
+.new-wrap .opt .txt { font-size: 11px; color: #777; line-height: 1.55; }
+.new-wrap .opt.sel::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #111; }
+.new-wrap .opt.sel .ltr, .new-wrap .opt.sel .txt { color: #111; }
+.new-wrap .opt.dim .ltr, .new-wrap .opt.dim .txt { color: #ddd; }
+.new-wrap .footer { display: flex; justify-content: flex-end; padding: 22px 32px 32px; }
+.new-wrap .btn { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #111; color: #fff; border: none; padding: 12px 26px; border-radius: 2px; }
+
+/* Interstitial */
+.int-old { background: #faf9f7; padding: 48px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; border-radius: 10px; box-shadow: 0 16px 60px rgba(0,0,0,0.12); }
+.int-old .ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b0a89e; }
+.int-old .div { width: 24px; height: 1px; background: #ede9e2; }
+.int-old .tt { font-family: Georgia, serif; font-size: 20px; color: #1a1a1a; line-height: 1.45; }
+.int-old .sub { font-size: 11px; color: #6b6560; max-width: 190px; line-height: 1.7; }
+.int-old .begbtn { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #1a1a1a; color: #faf9f7; border: none; padding: 11px 26px; margin-top: 2px; }
+
+.int-new { background: #ffffff; padding: 64px 40px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; border-radius: 6px; }
+.int-new .ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #aaa; }
+.int-new .div { width: 32px; height: 1px; background: #e0e0e0; }
+.int-new .tt { font-family: 'Libre Baskerville', Georgia, serif; font-size: 21px; color: #111; line-height: 1.5; }
+.int-new .sub { font-size: 11px; color: #777; max-width: 210px; line-height: 1.8; }
+.int-new .begbtn { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: #111; color: #fff; border: none; padding: 13px 30px; margin-top: 4px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Design Review — v2</h1>
+<h2>No Card, Just White</h2>
+<p class="subtitle">Removed the floating card shell entirely — content sits on a clean white background.</p>
+
+<div class="section-title">Question Slide <span class="change-tag">key change</span></div>
+<div class="split">
+  <div>
+    <div class="label">Before — floating card</div>
+    <div class="old-wrap">
+      <div class="old-card">
+        <div class="progress"><div class="progress-fill"></div></div>
+        <div class="header"><span>Section 1 — Portfolio</span><span>2 / 4</span></div>
+        <div class="question">What type of school did you attend?</div>
+        <div class="options">
+          <div class="opt dim"><span class="ltr">A</span><span class="txt">Competitive school with IB or A-levels</span></div>
+          <div class="opt sel"><span class="ltr">B</span><span class="txt">Well-known Lyceum or local school</span></div>
+          <div class="opt dim"><span class="ltr">C</span><span class="txt">Specialized school in arts or STEM</span></div>
+          <div class="opt dim"><span class="ltr">D</span><span class="txt">Standard public or private school</span></div>
+        </div>
+        <div class="footer"><button class="btn">Continue →</button></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="label">After — flat white</div>
+    <div class="new-wrap">
+      <div class="progress"><div class="progress-fill"></div></div>
+      <div class="header"><span>Section 1 — Portfolio</span><span>2 / 4</span></div>
+      <div class="question">What type of school did you attend?</div>
+      <div class="options">
+        <div class="opt dim"><span class="ltr">A</span><span class="txt">Competitive school with IB or A-levels</span></div>
+        <div class="opt sel"><span class="ltr">B</span><span class="txt">Well-known Lyceum or local school</span></div>
+        <div class="opt dim"><span class="ltr">C</span><span class="txt">Specialized school in arts or STEM</span></div>
+        <div class="opt dim"><span class="ltr">D</span><span class="txt">Standard public or private school</span></div>
+      </div>
+      <div class="footer"><button class="btn">Continue →</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-title" style="margin-top:40px;">Interstitial</div>
+<div class="split">
+  <div>
+    <div class="label">Before</div>
+    <div style="background:#f0ece3;padding:16px;border-radius:6px;">
+      <div class="int-old">
+        <div class="ey">Part Two</div>
+        <div class="div"></div>
+        <div class="tt">Your Interests &amp; Goals</div>
+        <div class="sub">The next section looks at where you want to go.</div>
+        <button class="begbtn">Begin →</button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="label">After</div>
+    <div class="int-new">
+      <div class="ey">Part Two</div>
+      <div class="div"></div>
+      <div class="tt">Your Interests &amp; Goals</div>
+      <div class="sub">The next section looks at where you want to go.</div>
+      <button class="begbtn">Begin →</button>
+    </div>
+  </div>
+</div>
+
+<ul class="change-list" style="margin-top:20px;">
+  <li>Card removed: no border-radius, no box-shadow, no outer background color</li>
+  <li>App background becomes white — the page IS the card</li>
+  <li>Progress bar sits at the very top edge of the viewport</li>
+  <li>Content width still constrained (max-width: 480px, centered)</li>
+  <li>All other refinements from v1 carry over (Libre Baskerville, accent bar, etc.)</li>
+</ul>
+
+</body>
+</html>

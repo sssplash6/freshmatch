@@ -5,14 +5,18 @@
 }
 
 :root {
-  --bg: #ffffff;
-  --bg-outer: #ffffff;
-  --ink: #111111;
-  --muted: #666666;
-  --faint: #aaaaaa;
-  --rule: #e8e8e8;
-  --selected-bg: oklch(96.5% 0 0);
-  --font-serif: 'Libre Baskerville', Georgia, serif;
+  /* Navy + orange + Georgia, matching the landing hero */
+  --bg: #0b1d38;
+  --bg-outer: #0a1730;
+  --ink: #f5efe4;
+  --muted: rgba(245, 239, 228, 0.72);
+  --faint: rgba(245, 239, 228, 0.42);
+  --rule: rgba(245, 239, 228, 0.14);
+  --selected-bg: rgba(255, 255, 255, 0.07);
+  --orange: #f18d05;
+  --orange-hi: #ff9a1f;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-sans: system-ui, -apple-system, sans-serif;
 }
 

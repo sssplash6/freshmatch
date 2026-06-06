@@ -1,5 +1,8 @@
+import { useEffect, useRef } from 'react'
 import '../styles/QuestionSlide.css'
 import Option from './Option'
+
+const ADVANCE_DELAY = 567 // ms — long enough to register the selection before moving on
 
 export default function QuestionSlide({
   question,
@@ -11,7 +14,21 @@ export default function QuestionSlide({
   direction,
   sectionLabel,
   counter,
+  isFinal = false,
 }) {
+  const timer = useRef(null)
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  function handleSelect(letter) {
+    onSelect(letter)
+    // Auto-advance on every question except the final one, which gets an
+    // explicit "see your results" action so the reveal stays deliberate.
+    if (!isFinal) {
+      clearTimeout(timer.current)
+      timer.current = setTimeout(() => onNext(), ADVANCE_DELAY)
+    }
+  }
+
   const canContinue = selectedLetter != null
 
   return (
@@ -23,7 +40,7 @@ export default function QuestionSlide({
 
       <div className="question-text">{question.text}</div>
 
-      <div className="options">
+      <div className="options" role="group" aria-label={sectionLabel}>
         {question.options.map(opt => (
           <Option
             key={opt.letter}
@@ -31,7 +48,7 @@ export default function QuestionSlide({
             text={opt.text}
             selected={selectedLetter === opt.letter}
             dimmed={selectedLetter != null && selectedLetter !== opt.letter}
-            onClick={() => onSelect(opt.letter)}
+            onClick={() => handleSelect(opt.letter)}
           />
         ))}
       </div>
@@ -40,12 +57,14 @@ export default function QuestionSlide({
         {showBack
           ? <button className="back-btn" onClick={onBack}>← Back</button>
           : <span />}
-        <button
-          className={`next-btn${canContinue ? ' active' : ''}`}
-          onClick={canContinue ? onNext : undefined}
-        >
-          Continue →
-        </button>
+        {isFinal && (
+          <button
+            className={`next-btn${canContinue ? ' active' : ''}`}
+            onClick={canContinue ? onNext : undefined}
+          >
+            See your results →
+          </button>
+        )}
       </div>
     </div>
   )

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: calc-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: ~anthropic/claude-sonnet-latest
+
+  - type: static
+    name: calc-frontend
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer } from 'react'
 import { section1, section2 } from '../data/questions'
 
 export const initialState = {
-  phase: 'section1',
+  phase: 'landing',
   currentIndex: 0,
   section1Answers: [],
   section2Answers: [],
@@ -11,6 +11,8 @@ export const initialState = {
 
 export function quizReducer(state, action) {
   switch (action.type) {
+    case 'START':
+      return { ...state, phase: 'section1', currentIndex: 0, direction: 'forward' }
     case 'ANSWER': {
       const key = state.phase === 'section2' ? 'section2Answers' : 'section1Answers'
       const answers = [...state[key]]

@@ -3,8 +3,8 @@ import { section2 } from '../data/questions'
 import ProgressBar from '../components/ProgressBar'
 import QuestionSlide from '../components/QuestionSlide'
 
-const TOTAL_STEPS = 15
-const S2_OFFSET = 5 // 4 s1 questions + 1 interstitial
+const TOTAL_QUESTIONS = 14
+const S2_OFFSET = 4 // 4 section-1 questions come first
 
 export default function Section2() {
   const { state, dispatch } = useQuiz()
@@ -12,7 +12,9 @@ export default function Section2() {
 
   const question = section2[currentIndex]
   const selectedLetter = section2Answers[currentIndex] ?? null
-  const percent = ((S2_OFFSET + currentIndex + 1) / TOTAL_STEPS) * 100
+  const overall = S2_OFFSET + currentIndex + 1
+  const percent = (overall / TOTAL_QUESTIONS) * 100
+  const isFinal = currentIndex === section2.length - 1
 
   function handleSelect(letter) {
     dispatch({ type: 'ANSWER', letter })
@@ -39,7 +41,8 @@ export default function Section2() {
         showBack={true}
         direction={direction}
         sectionLabel="Section 2 — Thinking Style"
-        counter={`${currentIndex + 1} / ${section2.length}`}
+        counter={`${overall} / ${TOTAL_QUESTIONS}`}
+        isFinal={isFinal}
       />
     </div>
   )

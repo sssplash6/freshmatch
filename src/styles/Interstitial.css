@@ -51,9 +51,9 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--bg);
-  background: var(--ink);
+  background: var(--orange);
   border: none;
-  border-radius: 2px;
+  border-radius: 6px;
   padding: 13px 32px;
   cursor: pointer;
   margin-top: 8px;
@@ -62,7 +62,7 @@
 }
 
 .interstitial-begin:hover {
-  background-color: #333333;
+  background-color: var(--orange-hi);
 }
 
 .interstitial-begin:active {

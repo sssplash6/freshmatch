@@ -3,7 +3,19 @@ import { describe, it, expect } from 'vitest'
 // Import the reducer directly (not the Provider) for pure unit testing
 import { quizReducer, initialState } from '../context/QuizContext'
 
+// initialState is now the landing screen; quiz logic begins once START fires.
+const section1State = { ...initialState, phase: 'section1' }
+
 describe('quizReducer', () => {
+  describe('START', () => {
+    it('moves from landing into section1', () => {
+      expect(initialState.phase).toBe('landing')
+      const state = quizReducer(initialState, { type: 'START' })
+      expect(state.phase).toBe('section1')
+      expect(state.currentIndex).toBe(0)
+    })
+  })
+
   describe('ANSWER', () => {
     it('records answer in section1Answers', () => {
       const state = quizReducer(initialState, { type: 'ANSWER', letter: 'B' })
@@ -25,14 +37,14 @@ describe('quizReducer', () => {
 
   describe('NEXT', () => {
     it('advances currentIndex within section1', () => {
-      const state = quizReducer(initialState, { type: 'NEXT' })
+      const state = quizReducer(section1State, { type: 'NEXT' })
       expect(state.currentIndex).toBe(1)
       expect(state.phase).toBe('section1')
       expect(state.direction).toBe('forward')
     })
 
     it('transitions to interstitial after last section1 question', () => {
-      const s = { ...initialState, currentIndex: 3 }
+      const s = { ...section1State, currentIndex: 3 }
       const state = quizReducer(s, { type: 'NEXT' })
       expect(state.phase).toBe('interstitial')
       expect(state.currentIndex).toBe(0)
@@ -61,14 +73,14 @@ describe('quizReducer', () => {
 
   describe('BACK', () => {
     it('decrements currentIndex within section1', () => {
-      const s = { ...initialState, currentIndex: 2 }
+      const s = { ...section1State, currentIndex: 2 }
       const state = quizReducer(s, { type: 'BACK' })
       expect(state.currentIndex).toBe(1)
       expect(state.direction).toBe('back')
     })
 
     it('does nothing on first question of section1', () => {
-      const state = quizReducer(initialState, { type: 'BACK' })
+      const state = quizReducer(section1State, { type: 'BACK' })
       expect(state.currentIndex).toBe(0)
       expect(state.phase).toBe('section1')
     })
