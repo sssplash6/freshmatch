@@ -589,7 +589,9 @@
 /* Spark pill button */
 .cta-btn {
   position: relative;
-  display: inline-grid;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   border: none;
   border-radius: 100px;
@@ -599,8 +601,6 @@
   flex-shrink: 0;
   transition: transform 180ms ease;
 }
-
-.cta-btn > * { grid-area: 1 / 1; }
 
 /* Rotating conic spark — half-masked so only the pill edge glows */
 .cta-btn__spark {
@@ -621,7 +621,7 @@
   top: 50%;
   left: 50%;
   translate: -50% -15%;
-  background: conic-gradient(from 0deg, transparent 0 340deg, #f18d05 360deg);
+  background: conic-gradient(from 0deg, transparent 0 340deg, white 360deg);
   animation: ctaRotate 3s linear infinite both;
 }
 
