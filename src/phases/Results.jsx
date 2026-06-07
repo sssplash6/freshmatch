@@ -279,7 +279,9 @@ function CtaSection({ rec }) {
           rel="noopener noreferrer"
           className="cta-btn"
         >
-          {prog.cta} →
+          <span className="cta-btn__spark" />
+          <span className="cta-btn__backdrop" />
+          <span className="cta-btn__label">{prog.cta} →</span>
         </a>
       </div>
       <p className="cta-desc">{prog.desc}</p>

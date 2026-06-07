@@ -586,34 +586,80 @@
   margin-top: 1px;
 }
 
-/* Clean orange pill button */
+/* Spark pill button */
 .cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 12px 26px;
-  background: var(--orange);
-  color: #fff;
+  position: relative;
+  display: inline-grid;
+  overflow: hidden;
   border: none;
   border-radius: 100px;
+  padding: 13px 28px;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+
+.cta-btn > * { grid-area: 1 / 1; }
+
+/* Rotating conic spark — half-masked so only the pill edge glows */
+.cta-btn__spark {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(black, transparent 50%);
+  mask: linear-gradient(black, transparent 50%);
+  animation: ctaFlip 6s infinite steps(2, end);
+}
+
+.cta-btn__spark::before {
+  content: '';
+  position: absolute;
+  aspect-ratio: 1;
+  width: 200%;
+  top: 50%;
+  left: 50%;
+  translate: -50% -15%;
+  background: conic-gradient(from 0deg, transparent 0 340deg, #f18d05 360deg);
+  animation: ctaRotate 3s linear infinite both;
+}
+
+@keyframes ctaFlip   { to { transform: rotate(360deg); } }
+@keyframes ctaRotate { to { transform: rotate(90deg);  } }
+
+/* Orange fill at inset 1px — hides spark except at the very edge */
+.cta-btn__backdrop {
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(100px - 1px);
+  background: var(--orange);
+  transition: background 160ms ease;
+}
+
+.cta-btn:hover .cta-btn__backdrop { background: #d97b00; }
+.cta-btn:hover                     { transform: translateY(-2px); }
+.cta-btn:active                    { transform: translateY(0); }
+
+/* Label above both layers */
+.cta-btn__label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #fff;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.2px;
   white-space: nowrap;
-  text-decoration: none;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: background 160ms ease, transform 180ms ease;
 }
 
-.cta-btn:hover {
-  background: #d97b00;
-  transform: translateY(-2px);
-}
-
-.cta-btn:active {
-  transform: translateY(0);
+@media (prefers-reduced-motion: reduce) {
+  .cta-btn__spark,
+  .cta-btn__spark::before { animation: none; }
 }
 
 [data-theme="light"] .results-cta--fs {
