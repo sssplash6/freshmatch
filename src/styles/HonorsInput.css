@@ -1,0 +1,82 @@
+.honor-level-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.honor-level-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 20px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.honor-level-btn:hover {
+  border-color: var(--orange);
+  color: var(--ink);
+}
+
+.honor-level-caret {
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.honor-level-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 100;
+  background: var(--bg);
+  border: 1px solid var(--rule-strong);
+  border-radius: 9px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.honor-level-opt {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.honor-level-opt:hover {
+  background: rgba(245, 239, 228, 0.06);
+  color: var(--ink);
+}
+
+.honor-level-opt--on {
+  color: var(--orange);
+  font-weight: 600;
+}
+
+[data-theme="light"] .honor-level-menu {
+  box-shadow: 0 6px 20px rgba(11, 29, 56, 0.12);
+}
+
+[data-theme="light"] .honor-level-opt:hover {
+  background: rgba(11, 29, 56, 0.05);
+}
+
+.honor-participants-input {
+  width: 100px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}

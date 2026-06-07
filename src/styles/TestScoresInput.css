@@ -1,0 +1,183 @@
+.test-scores-list {
+  padding: 28px 32px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.test-score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.test-score-row:last-of-type {
+  border-bottom: 1px solid var(--rule);
+}
+
+.test-type-label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 64px;
+  flex-shrink: 0;
+}
+
+.test-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 4px 0;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.test-input::placeholder {
+  color: var(--faint);
+}
+
+.test-input:focus {
+  border-bottom-color: var(--orange);
+}
+
+.test-score-input {
+  flex: 1;
+}
+
+.test-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--faint);
+  transition: color 150ms ease;
+}
+
+.test-remove-btn:hover {
+  color: var(--ink);
+}
+
+.gpa-scale-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.gpa-scale-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 7px;
+  padding: 4px 7px 4px 9px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 150ms ease;
+}
+
+.gpa-scale-btn:hover {
+  border-color: var(--orange);
+}
+
+.gpa-scale-btn:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.gpa-scale-caret {
+  font-size: 10px;
+  color: var(--faint);
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.gpa-scale-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 50;
+  background: var(--bg);
+  border: 1px solid var(--rule-strong);
+  border-radius: 9px;
+  padding: 4px;
+  list-style: none;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.18);
+  min-width: 100%;
+}
+
+.gpa-scale-opt {
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.gpa-scale-opt:hover {
+  background: rgba(245, 239, 228, 0.07);
+  color: var(--ink);
+}
+
+.gpa-scale-opt--on {
+  color: var(--orange);
+  font-weight: 600;
+}
+
+[data-theme="light"] .gpa-scale-menu {
+  box-shadow: 0 8px 24px rgba(11, 29, 56, 0.13), 0 2px 6px rgba(11, 29, 56, 0.07);
+}
+
+[data-theme="light"] .gpa-scale-opt:hover {
+  background: rgba(11, 29, 56, 0.05);
+}
+
+.test-optional-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 0 4px;
+}
+
+/* Pill-chip "add optional test" buttons — clearly interactive */
+.test-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  background: none;
+  border: 1px solid var(--rule-strong);
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  transition: color 150ms ease,
+              border-color 150ms ease,
+              background-color 150ms ease;
+}
+
+.test-add-btn:hover {
+  color: var(--orange);
+  border-color: rgba(241, 141, 5, 0.50);
+  background-color: rgba(241, 141, 5, 0.05);
+}

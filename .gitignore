@@ -17,6 +17,10 @@ dist
 dist-ssr
 *.local
 
+# Fiske extraction artifacts
+scripts/fiske-text.txt
+server/data/schools-raw/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

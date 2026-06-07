@@ -5,14 +5,14 @@
 }
 
 :root {
-  /* Navy + orange + Georgia, matching the landing hero */
-  --bg: #0b1d38;
-  --bg-outer: #0a1730;
+  --bg: #0d2040;
+  --bg-outer: #0d2040;
   --ink: #f5efe4;
-  --muted: rgba(245, 239, 228, 0.72);
-  --faint: rgba(245, 239, 228, 0.42);
-  --rule: rgba(245, 239, 228, 0.14);
-  --selected-bg: rgba(255, 255, 255, 0.07);
+  --muted: rgba(245, 239, 228, 0.80);
+  --faint: rgba(245, 239, 228, 0.52);
+  --rule: rgba(245, 239, 228, 0.17);
+  --rule-strong: rgba(245, 239, 228, 0.28);  /* input borders, selects */
+  --selected-bg: rgba(255, 255, 255, 0.08);
   --orange: #f18d05;
   --orange-hi: #ff9a1f;
   --font-serif: Georgia, 'Times New Roman', serif;
@@ -20,12 +20,33 @@
   --font-sans: system-ui, -apple-system, sans-serif;
 }
 
+/* ── Light theme ─────────────────────────────────────── */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-outer: #ffffff;
+  --ink: #0b1d38;
+  --muted: rgba(11, 29, 56, 0.70);
+  --faint: rgba(11, 29, 56, 0.46);
+  --rule: rgba(11, 29, 56, 0.13);
+  --rule-strong: rgba(11, 29, 56, 0.22);
+  --selected-bg: rgba(11, 29, 56, 0.05);
+  --orange: #d97a00;
+  --orange-hi: #f18d05;
+}
+
+[data-theme="light"] body {
+  background: var(--bg-outer);
+}
+
+
+/* ─────────────────────────────────────────────────────── */
+
 html, body, #root {
   height: 100%;
 }
 
 body {
-  background: var(--bg);
+  background: var(--bg-outer);
   color: var(--ink);
   font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
@@ -43,8 +64,54 @@ body {
   width: 100%;
   max-width: 480px;
   background: var(--bg);
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
+}
+
+/* ── Theme toggle ─────────────────────────────────────── */
+.theme-toggle {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 239, 228, 0.20);
+  background: rgba(13, 32, 64, 0.55);
+  color: rgba(245, 239, 228, 0.70);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  user-select: none;
+}
+
+.theme-toggle:hover {
+  background: rgba(13, 32, 64, 0.80);
+  color: rgba(245, 239, 228, 1);
+  border-color: rgba(245, 239, 228, 0.38);
+}
+
+[data-theme="light"] .theme-toggle {
+  border-color: rgba(11, 29, 56, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(11, 29, 56, 0.65);
+}
+
+[data-theme="light"] .theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(11, 29, 56, 1);
+  border-color: rgba(11, 29, 56, 0.30);
 }
 
 @media (prefers-reduced-motion: reduce) {

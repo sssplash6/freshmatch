@@ -1,49 +1,36 @@
-// Maps each school the calculator can output to a logo slug (a file in
-// /public/logos) and a short monogram used for the seal fallback when no logo
-// file exists. Keep in sync with BASE_SCHOOLS / ADJUSTED_SCHOOLS in scoring.js.
 const META = {
-  'MIT':                        { slug: 'mit',       monogram: 'MIT' },
-  'Caltech':                    { slug: 'caltech',   monogram: 'Ct' },
-  'Carnegie Mellon University': { slug: 'cmu',       monogram: 'CMU' },
-  'Georgia Tech':               { monogram: 'GT' },
-  'Cornell Engineering':        { slug: 'cornell',   monogram: 'Cor' },
-  'Harvard University':         { slug: 'harvard',   monogram: 'H' },
-  'Yale University':            { slug: 'yale',      monogram: 'Y' },
-  'Princeton University':       { slug: 'princeton', monogram: 'Pr' },
-  'Columbia University':        { slug: 'columbia',  monogram: 'Co' },
-  'Columbia University (Core)': { slug: 'columbia',  monogram: 'Co' },
-  'UPenn':                      { slug: 'upenn',     monogram: 'P' },
-  'UPenn Wharton':              { slug: 'upenn',     monogram: 'P' },
-  'University of Chicago':      { slug: 'uchicago',  monogram: 'UC' },
-  'Brown University':           { slug: 'brown',     monogram: 'Br' },
-  'Stanford University':        { slug: 'stanford',  monogram: 'S' },
-  'UC Berkeley':                { slug: 'berkeley',  monogram: 'Cal' },
-  'Babson College':            { monogram: 'Ba' },
-  'CMU-Q':                     { monogram: 'CMQ' },
-  'NYUAD':                      { slug: 'nyuad',     monogram: 'NYU' },
-  'Harvey Mudd College':       { monogram: 'HM' },
-  'Cooper Union':              { monogram: 'CU' },
-  'DKU':                       { monogram: 'DKU' },
-  'NYUSH':                     { monogram: 'NSH' },
-  'GU-Q':                      { monogram: 'GUQ' },
-  'Colby College':             { monogram: 'Cby' },
-  'Lafayette College':         { monogram: 'Laf' },
-  'Yonsei University':         { monogram: 'Yon' },
-  'Hamilton College':          { monogram: 'Ham' },
+  'harvard':         { slug: 'harvard',   monogram: 'H'    },
+  'yale':            { slug: 'yale',      ext: 'svg', monogram: 'Y'    },
+  'princeton':       { slug: 'princeton', monogram: 'Pr'   },
+  'columbia':        { slug: 'columbia',  monogram: 'Co'   },
+  'upenn':           { slug: 'upenn',     monogram: 'P'    },
+  'brown':           { slug: 'brown',     monogram: 'Br'   },
+  'cornell':         { slug: 'cornell',   monogram: 'Cor'  },
+  'mit':             { slug: 'mit',       monogram: 'MIT'  },
+  'stanford':        { slug: 'stanford',  monogram: 'S'    },
+  'caltech':         { slug: 'caltech',   monogram: 'Ct'   },
+  'carnegie-mellon': { slug: 'cmu',       monogram: 'CMU'  },
+  'uchicago':        { slug: 'uchicago',  monogram: 'UC'   },
+  'berkeley':        { slug: 'berkeley',  monogram: 'Cal'  },
+  'nyuad':           { slug: 'nyuad',     monogram: 'NYUAD'},
+  'nyush':           { monogram: 'NYUSH'},
+  'cmu-q':           { slug: 'cmu',       monogram: 'CMU-Q'},
 }
 
-// Fallback for any school not explicitly mapped: initials of significant words.
 function deriveMonogram(name) {
   const words = name
     .replace(/\(.*?\)/g, '')
     .split(/\s+/)
-    .filter(w => w && !/^(of|the|and|university|college)$/i.test(w))
+    .filter(w => w && !/^(of|the|and|university|college|at|in)$/i.test(w))
   const letters = words.map(w => w[0]).join('').slice(0, 3)
   return (letters || name.slice(0, 2)).toUpperCase()
 }
 
-export function schoolBadge(name) {
-  const meta = META[name]
-  if (meta) return { slug: meta.slug ?? null, monogram: meta.monogram }
-  return { slug: null, monogram: deriveMonogram(name) }
+export function schoolBadge(id, name) {
+  const meta = META[id]
+  if (meta) {
+    const path = meta.slug ? `/logos/${meta.slug}.${meta.ext || 'png'}` : null
+    return { path, monogram: meta.monogram }
+  }
+  return { path: null, monogram: deriveMonogram(name || id || '') }
 }

@@ -1,0 +1,41 @@
+.essay-optional-badge {
+  margin-left: 12px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--faint);
+  vertical-align: middle;
+}
+
+.essay-field-wrap {
+  padding: 24px 32px 0;
+  flex: 1;
+}
+
+.essay-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 14px 16px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.essay-textarea::placeholder {
+  color: var(--faint);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.essay-textarea:focus {
+  border-color: var(--orange);
+  background: rgba(255, 255, 255, 0.05);
+}

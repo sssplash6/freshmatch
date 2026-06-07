@@ -1,53 +1,101 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import Results from '../phases/Results'
 
-const mockState = {
-  section1Answers: ['A', 'A', 'A', 'A'], // score 16 → t20
-  section2Answers: ['C','C','C','C','C','C','C','C','C','C'], // fit C
-}
+const mockDispatch = vi.fn()
 
 vi.mock('../context/QuizContext', () => ({
-  useQuiz: () => ({ state: mockState, dispatch: vi.fn() }),
+  useQuiz: () => ({
+    state: {
+      name: 'Alex',
+      testScores: { gpa: '3.8', sat: '1450', ielts: '7.0' },
+      extracurriculars: [{ description: 'Debate team captain' }],
+      honors: [{ title: 'National Science Olympiad', level: 'National', participants: '5000' }],
+      essay: 'I want to study the intersection of...',
+      efc: 25000,
+    },
+    dispatch: mockDispatch,
+  }),
 }))
 
+const MOCK_SCHOOLS = [
+  {
+    id: 'brown',
+    name: 'Brown University',
+    fitScore: 88,
+    narrative: 'Brown\'s open curriculum suits your self-directed approach.',
+    matchReasons: ['Open curriculum', 'Strong debate community'],
+    concerns: ['Highly selective'],
+  },
+  {
+    id: 'dartmouth',
+    name: 'Dartmouth College',
+    fitScore: 82,
+    narrative: 'Dartmouth\'s collaborative culture matches your extracurriculars.',
+    matchReasons: ['Strong liberal arts'],
+    concerns: ['Rural location'],
+  },
+]
+
 describe('Results', () => {
-  it('renders fit label', () => {
-    mockState.section1Answers = ['A', 'A', 'A', 'A']
-    render(<Results />)
-    expect(screen.getByText('Free-Spirit Intellectual')).toBeInTheDocument()
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
   })
 
-  it('renders base schools under the Best Fit group', () => {
-    mockState.section1Answers = ['A', 'A', 'A', 'A']
-    render(<Results />)
-    expect(screen.getByText('Best Fit')).toBeInTheDocument()
-    expect(screen.getByText('University of Chicago')).toBeInTheDocument()
-    expect(screen.getByText('Brown University')).toBeInTheDocument()
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
-  it('shows only the Best Fit group for a t20 profile', () => {
-    mockState.section1Answers = ['A', 'A', 'A', 'A'] // t20 → no adjustment
+  it('shows loading state initially', () => {
+    fetch.mockReturnValue(new Promise(() => {}))  // never resolves
     render(<Results />)
-    expect(screen.getByText('Best Fit')).toBeInTheDocument()
-    expect(screen.queryByText('Realistic For Your Profile')).not.toBeInTheDocument()
+    expect(screen.getByText('lowkey asking our AI bestie rn 🔮')).toBeInTheDocument()
   })
 
-  it('shows both groups with distinct captions for a mid-tier profile', () => {
-    mockState.section1Answers = ['A', 'B', 'C', 'B'] // score 12 → mid
+  it('renders school cards after successful fetch', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ schools: MOCK_SCHOOLS }),
+    })
     render(<Results />)
-    // Fit group: aspirational, profile-based
-    expect(screen.getByText('Best Fit')).toBeInTheDocument()
-    expect(screen.getByText(/Where you belong by temperament/)).toBeInTheDocument()
-    // Adjusted group: realistic, academics-based
-    expect(screen.getByText('Realistic For Your Profile')).toBeInTheDocument()
-    expect(screen.getByText(/Realistic schools you'd fit based on your current academic profile/)).toBeInTheDocument()
-    // Adjusted school renders as a plain name (no "adjusted" suffix)
-    expect(screen.getByText('NYUAD')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Brown University')).toBeInTheDocument())
+    expect(screen.getByText('Dartmouth College')).toBeInTheDocument()
+    expect(screen.getByText('2 schools for Alex')).toBeInTheDocument()
   })
 
-  it('renders start over button', () => {
-    mockState.section1Answers = ['A', 'A', 'A', 'A']
+  it('shows fit scores for each school', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ schools: MOCK_SCHOOLS }),
+    })
+    render(<Results />)
+    await waitFor(() => expect(screen.getByText('88')).toBeInTheDocument())
+    expect(screen.getByText('82')).toBeInTheDocument()
+  })
+
+  it('shows no-matches message when schools array is empty', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ schools: [] }),
+    })
+    render(<Results />)
+    await waitFor(() => expect(screen.getByText('No financial matches found')).toBeInTheDocument())
+  })
+
+  it('shows error message on fetch failure', async () => {
+    fetch.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'OpenRouter 500: internal error' }),
+    })
+    render(<Results />)
+    await waitFor(() => expect(screen.getByText('Something went wrong')).toBeInTheDocument())
+  })
+
+  it('renders start over button', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ schools: MOCK_SCHOOLS }),
+    })
     render(<Results />)
     expect(screen.getByText('↺ Start Over')).toBeInTheDocument()
   })
