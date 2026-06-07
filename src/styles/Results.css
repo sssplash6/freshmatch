@@ -477,6 +477,149 @@
   cursor: default;
 }
 
+/* ── Scroll nudge ─────────────────────────────────────── */
+.results-scroll-nudge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 0 4px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--faint);
+  user-select: none;
+}
+
+.nudge-arrow {
+  font-size: 20px;
+  color: var(--orange);
+  opacity: 0.65;
+  animation: nudgeBob 1.9s ease-in-out infinite;
+  line-height: 1;
+}
+
+@keyframes nudgeBob {
+  0%, 100% { transform: translateY(0);   opacity: 0.65; }
+  50%       { transform: translateY(7px); opacity: 1;    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-arrow { animation: none; }
+}
+
+/* ── Above-fold wrapper — pushes CTA below viewport ─────── */
+.results-above-fold {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── CTA section ─────────────────────────────────────── */
+.results-cta {
+  padding-top: 40px;
+  padding-bottom: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.results-cta--fs {
+  border-top-color: rgba(241, 141, 5, 0.28);
+}
+
+/* Name + button side-by-side at the top */
+.cta-top-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.cta-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+
+.cta-name {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: -0.4px;
+}
+
+.cta-desc {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.74;
+  margin-bottom: 20px;
+  max-width: 560px;
+}
+
+.cta-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cta-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.cta-bullet-check {
+  color: var(--orange);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Clean orange pill button */
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 26px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  text-decoration: none;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 160ms ease, transform 180ms ease;
+}
+
+.cta-btn:hover {
+  background: #d97b00;
+  transform: translateY(-2px);
+}
+
+.cta-btn:active {
+  transform: translateY(0);
+}
+
+[data-theme="light"] .results-cta--fs {
+  border-top-color: rgba(217, 122, 0, 0.24);
+}
+
 /* ── Footer ───────────────────────────────────────────── */
 .results-divider {
   width: 100%;

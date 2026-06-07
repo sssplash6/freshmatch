@@ -55,6 +55,42 @@ import { schoolBadge } from '../data/schoolLogos'
 
 const MAX_SCHOOLS = 14
 
+const PROGRAMS = {
+  'full-support': {
+    label: 'Full Support',
+    tagline: "Freshman Academy's flagship — the Central Asian leader in Ivy League admissions.",
+    desc: "12–15 competitive students work one-on-one with mentors to craft an Ivy-level university application. Over 85% of students are admitted to a competitive U.S. or global college, including Harvard, Yale, Stanford, and more.",
+    bullets: [
+      '12–15 students selected annually from 95+ applications',
+      'Personal statement, supplements, research paper & CommonApp',
+      '85%+ admitted to top US and global universities',
+    ],
+    url: 'https://freshman.academy/full-support',
+    cta: 'Reserve Your Spot',
+  },
+  admissions: {
+    label: 'Admissions Program',
+    tagline: "Freshman Academy's most life-changing program yet.",
+    desc: "Students write 25,000+ words of essays and engage with hundreds of pages of undergraduate literature — experiencing Ivy League education before you even enroll.",
+    bullets: [
+      '24 live lessons + 19+ hours of 1-on-1 mentorship',
+      'Personal statement, research paper & full essay coaching',
+      'Curriculum reviewed by a Virginia Tech professor & 15-year admissions expert',
+    ],
+    url: 'https://freshman.academy/admissions',
+    cta: 'Reserve Your Spot',
+  },
+}
+
+function getRecommendation(testScores, honors, extracurriculars) {
+  const sat = parseInt(testScores?.sat) || 0
+  const topHonors = (honors || []).filter(h => h.level === 'intl' || h.level === 'natl').length
+  const filledEcs = (extracurriculars || []).filter(e => e.description?.trim()).length
+  if (sat >= 1500 && (topHonors >= 1 || filledEcs >= 5)) return 'full-support'
+  if (topHonors >= 2 && filledEcs >= 5) return 'full-support'
+  return 'admissions'
+}
+
 function LogoBadge({ id, name, size }) {
   const { path, monogram } = schoolBadge(id, name)
   const [imgErr, setImgErr] = useState(false)
@@ -220,6 +256,45 @@ function ExpandedSchool({ school, index, total, onClose, onNav, navDirRef }) {
   )
 }
 
+function CtaSection({ rec }) {
+  const prog = PROGRAMS[rec]
+  const isFS = rec === 'full-support'
+
+  return (
+    <motion.section
+      className={`results-cta${isFS ? ' results-cta--fs' : ''}`}
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '0px' }}
+      transition={{ type: 'spring', stiffness: 190, damping: 26 }}
+    >
+      <div className="cta-top-row">
+        <div>
+          <div className="cta-eyebrow">Recommended for you</div>
+          <div className="cta-name">{prog.label}</div>
+        </div>
+        <a
+          href={prog.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cta-btn"
+        >
+          {prog.cta} →
+        </a>
+      </div>
+      <p className="cta-desc">{prog.desc}</p>
+      <div className="cta-bullets">
+        {prog.bullets.map((b, i) => (
+          <div key={i} className="cta-bullet">
+            <span className="cta-bullet-check">✓</span>
+            <span>{b}</span>
+          </div>
+        ))}
+      </div>
+    </motion.section>
+  )
+}
+
 export default function Results() {
   const { state, dispatch } = useQuiz()
   const { name, testScores, extracurriculars, honors, essay, efc } = state
@@ -274,6 +349,8 @@ export default function Results() {
     setExpandedIndex(null)
   }, [])
 
+  const rec = getRecommendation(testScores, honors, extracurriculars)
+
   const cols = schools.length <= 4
     ? (schools.length || 1)
     : Math.min(7, Math.ceil(schools.length / 2))
@@ -281,74 +358,87 @@ export default function Results() {
   return (
     <>
       <div className="results-page">
-        <div className="results-header">
-          <div className="results-complete res-rise" style={{ animationDelay: '0ms' }}>
-            <span className="results-check">✓</span> Assessment complete
+        {/* ── Above-fold: fills at least full viewport so CTA always requires scrolling ── */}
+        <div className="results-above-fold">
+          <div className="results-header">
+            <div className="results-complete res-rise" style={{ animationDelay: '0ms' }}>
+              <span className="results-check">✓</span> Assessment complete
+            </div>
+
+            {status === 'loading' && (
+              <div className="res-rise" style={{ animationDelay: '60ms' }}>
+                <LoadingBar />
+              </div>
+            )}
+
+            {status === 'error' && (
+              <>
+                <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Error</div>
+                <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>Something went wrong</div>
+                <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
+              </>
+            )}
+
+            {status === 'done' && (
+              <>
+                <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
+                <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
+                  {schools.length > 0
+                    ? `${schools.length} schools for ${name || 'you'}`
+                    : 'No financial matches found'}
+                </div>
+                <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
+                  {schools.length > 0
+                    ? 'Tap any school to see your full fit analysis.'
+                    : 'No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.'}
+                </p>
+              </>
+            )}
           </div>
 
-          {status === 'loading' && (
-            <div className="res-rise" style={{ animationDelay: '60ms' }}>
-              <LoadingBar />
+          {status === 'done' && schools.length > 0 && (
+            <motion.div
+              className="school-grid"
+              style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.05, delayChildren: 0.18 } },
+              }}
+            >
+              {schools.map((school, i) => (
+                <motion.div
+                  key={school.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 20, scale: 0.94 },
+                    visible: {
+                      opacity: 1, y: 0, scale: 1,
+                      transition: { type: 'spring', stiffness: 260, damping: 22 },
+                    },
+                  }}
+                >
+                  <SchoolTile
+                    school={school}
+                    index={i}
+                    onExpand={handleExpand}
+                    invisible={expandedIndex === i}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {status === 'done' && schools.length > 0 && (
+            <div className="results-scroll-nudge">
+              <span>Your next step</span>
+              <span className="nudge-arrow">↓</span>
             </div>
-          )}
-
-          {status === 'error' && (
-            <>
-              <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Error</div>
-              <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>Something went wrong</div>
-              <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
-            </>
-          )}
-
-          {status === 'done' && (
-            <>
-              <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
-              <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
-                {schools.length > 0
-                  ? `${schools.length} schools for ${name || 'you'}`
-                  : 'No financial matches found'}
-              </div>
-              <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
-                {schools.length > 0
-                  ? 'Tap any school to see your full fit analysis.'
-                  : 'No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.'}
-              </p>
-            </>
           )}
         </div>
 
-        {status === 'done' && schools.length > 0 && (
-          <motion.div
-            className="school-grid"
-            style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.05, delayChildren: 0.18 } },
-            }}
-          >
-            {schools.map((school, i) => (
-              <motion.div
-                key={school.id}
-                variants={{
-                  hidden: { opacity: 0, y: 20, scale: 0.94 },
-                  visible: {
-                    opacity: 1, y: 0, scale: 1,
-                    transition: { type: 'spring', stiffness: 260, damping: 22 },
-                  },
-                }}
-              >
-                <SchoolTile
-                  school={school}
-                  index={i}
-                  onExpand={handleExpand}
-                  invisible={expandedIndex === i}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+        {/* ── CTA: always below the fold ── */}
+        {status === 'done' && schools.length > 0 && <CtaSection rec={rec} />}
 
         <div className="results-divider res-rise" style={{ animationDelay: '200ms' }} />
         <div className="results-actions res-rise" style={{ animationDelay: '240ms' }}>
