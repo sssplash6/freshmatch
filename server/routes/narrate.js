@@ -119,6 +119,7 @@ function compressSchool(school) {
     `[${school.id}] ${school.name}${accept ? ` (${accept})` : ''}`,
     programs ? `Programs: ${programs}` : '',
     school.academicEnvironment ? `Feel: ${school.academicEnvironment}` : '',
+    school.bestForStudents ? `For: ${school.bestForStudents.slice(0, 80)}` : '',
   ].filter(Boolean).join('\n')
 }
 
