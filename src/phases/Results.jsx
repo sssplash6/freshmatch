@@ -7,16 +7,29 @@ const PHRASES = [
   "doing math harder than your SAT rn 😭",
 ]
 
+const ETA_TOTAL = 25
+
 function LoadingBar() {
-  const [progress, setProgress]   = useState(0)
-  const [eta, setEta]             = useState(22)
+  const [eta, setEta]             = useState(ETA_TOTAL)
   const [phraseIdx, setPhraseIdx] = useState(0)
+  const barRef   = useRef(null)
+  const startRef = useRef(null)
 
   useEffect(() => {
-    const progId   = setInterval(() => setProgress(p => p + (88 - p) * 0.07), 380)
-    const etaId    = setInterval(() => setEta(e => Math.max(0, e - 1)), 1000)
+    startRef.current = performance.now()
+    let rafId
+
+    function tick(now) {
+      const elapsed = (now - startRef.current) / 1000
+      const t = Math.min(elapsed / ETA_TOTAL, 1)
+      if (barRef.current) barRef.current.style.width = `${t * 88}%`
+      setEta(Math.max(0, Math.round(ETA_TOTAL - elapsed)))
+      if (t < 1) rafId = requestAnimationFrame(tick)
+    }
+
+    rafId = requestAnimationFrame(tick)
     const phraseId = setInterval(() => setPhraseIdx(i => (i + 1) % PHRASES.length), 2800)
-    return () => { clearInterval(progId); clearInterval(etaId); clearInterval(phraseId) }
+    return () => { cancelAnimationFrame(rafId); clearInterval(phraseId) }
   }, [])
 
   return (
@@ -34,7 +47,7 @@ function LoadingBar() {
         </motion.p>
       </AnimatePresence>
       <div className="results-bar-wrap">
-        <div className="results-bar" style={{ width: `${progress}%` }} />
+        <div className="results-bar" ref={barRef} />
       </div>
       <p className="results-eta">{eta > 0 ? `~${eta}s` : 'almost there…'}</p>
     </div>

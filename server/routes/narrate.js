@@ -197,12 +197,33 @@ ${schoolList}`
     let parsed
     try {
       parsed = JSON.parse(cleaned)
-    } catch (_) {
-      // Response was likely truncated mid-JSON — salvage complete school entries
-      const lastEntry = cleaned.lastIndexOf('},')
-      if (lastEntry > 10) {
-        try { parsed = JSON.parse(cleaned.slice(0, lastEntry + 1) + ']}') } catch (_) {}
+    } catch (parseErr) {
+      console.error('JSON parse failed:', parseErr.message)
+
+      // Strategy 1: use error position to find last valid entry before the break
+      const posMatch = parseErr.message.match(/position (\d+)/)
+      const breakPos = posMatch ? parseInt(posMatch[1]) : cleaned.length
+      const beforeBreak = cleaned.lastIndexOf('},', breakPos)
+      if (beforeBreak > 10) {
+        try { parsed = JSON.parse(cleaned.slice(0, beforeBreak + 1) + ']}') } catch (_) {}
       }
+
+      // Strategy 2: full-string fallback — last }, anywhere
+      if (!parsed) {
+        const lastEntry = cleaned.lastIndexOf('},')
+        if (lastEntry > 10) {
+          try { parsed = JSON.parse(cleaned.slice(0, lastEntry + 1) + ']}') } catch (_) {}
+        }
+      }
+
+      // Strategy 3: last } (final entry may lack trailing comma)
+      if (!parsed) {
+        const lastBrace = cleaned.lastIndexOf('}')
+        if (lastBrace > 10) {
+          try { parsed = JSON.parse(cleaned.slice(0, lastBrace + 1) + ']}') } catch (_) {}
+        }
+      }
+
       if (!parsed) throw new Error('AI response could not be parsed — please try again')
     }
 
