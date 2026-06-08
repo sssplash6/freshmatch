@@ -109,16 +109,16 @@ function buildStudentSummary({ name, testScores, extracurriculars, honors, essay
   ].filter(Boolean).join('\n\n')
 }
 
+// Max schools sent to AI — caps prompt size for high-EFC students who pass 100+ schools
+const MAX_ELIGIBLE = 50
+
 function compressSchool(school) {
-  const accept  = school.stats?.accepted ? `${school.stats.accepted}% admit` : ''
-  const programs = (school.strongPrograms || []).slice(0, 5).join(', ')
-  const chars   = (school.character || []).slice(0, 3).join('; ')
+  const accept   = school.stats?.accepted ? `${school.stats.accepted}% admit` : ''
+  const programs = (school.strongPrograms || []).slice(0, 3).join(', ')
   return [
     `[${school.id}] ${school.name}${accept ? ` (${accept})` : ''}`,
     programs ? `Programs: ${programs}` : '',
-    chars    ? `Character: ${chars}` : '',
-    school.academicEnvironment ? `Academic feel: ${school.academicEnvironment}` : '',
-    school.bestForStudents     ? `Best for: ${school.bestForStudents}` : '',
+    school.academicEnvironment ? `Feel: ${school.academicEnvironment}` : '',
   ].filter(Boolean).join('\n')
 }
 
@@ -157,39 +157,40 @@ router.post('/', async (req, res) => {
       return res.json({ schools: [] })
     }
 
+    // Cap to avoid ballooning input tokens for high-EFC students
+    const pool = eligible.length > MAX_ELIGIBLE ? eligible.slice(0, MAX_ELIGIBLE) : eligible
+
     const studentSummary = buildStudentSummary({ name, testScores, extracurriculars, honors, essay, efc })
-    const schoolList = eligible.map(compressSchool).join('\n\n---\n\n')
+    const schoolList = pool.map(compressSchool).join('\n---\n')
 
     const systemPrompt = `You are a senior college admissions counselor at Freshman Academy, specializing in placing international students at US universities. You have deep knowledge of each school's culture, academics, and what truly makes a student thrive there. Be specific and honest — vague praise wastes everyone's time.`
 
     // Build a lookup for post-AI validation — name comes from our data, not the model
-    const eligibleMap = new Map(eligible.map(s => [s.id, s]))
+    const eligibleMap = new Map(pool.map(s => [s.id, s]))
 
     const userMessage = `Student profile:
 
 ${studentSummary}
 
-The ${eligible.length} schools below have already passed financial screening. You MUST select ONLY from this exact list — do not suggest any school not shown here, even if you know of other good fits.
+Pick the 10–14 best matches from the ${pool.length} schools below. ONLY use schools from this list.
 
-Select the 10–15 best matches from this list.
-
-For each chosen school return:
-- "id": the bracketed [id] shown (copy it exactly)
+For each school return:
+- "id": exact bracketed [id]
 - "name": school name
-- "fitScore": integer 0–100 (reserve 90+ for exceptional matches)
-- "narrative": 2–3 sentences specific to THIS student — not generic praise, explain WHY their background connects to this school's character
-- "matchReasons": array of 2–3 strings (concrete connections)
-- "concerns": array of 1–2 strings (honest challenges or limitations)
+- "fitScore": integer 0–100
+- "narrative": 1–2 sentences — WHY this student fits this school specifically
+- "matchReasons": 2–3 short strings
+- "concerns": 1–2 short strings
 
-Return exactly: { "schools": [...] } sorted by fitScore descending. No markdown fences, no extra keys.
+Return exactly: { "schools": [...] } sorted by fitScore desc. No markdown, no extra keys.
 
-Schools (choose ONLY from these):
+Schools:
 
 ${schoolList}`
 
     const raw = await chat(
       [{ role: 'user', content: userMessage }],
-      { systemPrompt, max_tokens: 8000, response_format: { type: 'json_object' } }
+      { systemPrompt, max_tokens: 4000, response_format: { type: 'json_object' } }
     )
 
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
