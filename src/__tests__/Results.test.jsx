@@ -49,7 +49,7 @@ describe('Results', () => {
   it('shows loading state initially', () => {
     fetch.mockReturnValue(new Promise(() => {}))  // never resolves
     render(<Results />)
-    expect(screen.getByText('lowkey asking our AI bestie rn 🔮')).toBeInTheDocument()
+    expect(screen.getByText('digging through admissions lore 📚')).toBeInTheDocument()
   })
 
   it('renders school cards after successful fetch', async () => {

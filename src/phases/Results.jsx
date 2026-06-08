@@ -2,17 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const PHRASES = [
-  "lowkey asking our AI bestie rn 🔮",
-  "running the numbers, no cap 📊",
-  "main character arc loading... 📚",
-  "the algorithm is cooking fr 💅",
-  "scanning 143+ schools for your vibe ✨",
-  "slay, the good things take a sec 💀",
-  "manifesting your acceptance letters 🪄",
-  "real ones wait for the W schools 🎯",
-  "reading your aura against each campus 🧠",
-  "blocking every financial L rn 💰",
-  "bestie we're about to change your life 🎓",
+  "digging through admissions lore 📚",
+  "checking if your extracurriculars are built different 🚀",
   "doing math harder than your SAT rn 😭",
 ]
 
