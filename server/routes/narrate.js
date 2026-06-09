@@ -118,7 +118,7 @@ function compressSchool(school) {
   return [
     `[${school.id}] ${school.name}${accept ? ` (${accept})` : ''}`,
     programs ? `Programs: ${programs}` : '',
-    school.academicEnvironment ? `Feel: ${school.academicEnvironment}` : '',
+    school.academicEnvironment ? `Feel: ${school.academicEnvironment.slice(0, 120)}` : '',
     school.bestForStudents ? `For: ${school.bestForStudents.slice(0, 80)}` : '',
   ].filter(Boolean).join('\n')
 }
@@ -191,7 +191,7 @@ ${schoolList}`
 
     const raw = await chat(
       [{ role: 'user', content: userMessage }],
-      { systemPrompt, max_tokens: 4000, response_format: { type: 'json_object' } }
+      { systemPrompt, max_tokens: 6000, response_format: { type: 'json_object' } }
     )
 
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
