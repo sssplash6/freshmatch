@@ -235,7 +235,7 @@ For each school return:
 - "matchReasons": 2–3 short strings
 - "concerns": 1–2 short strings
 
-Return exactly: { "schools": [...] } sorted by fitScore desc. No markdown, no extra keys.
+Return exactly this JSON: { "schools": [...] } sorted by fitScore desc. No markdown, no extra keys.
 
 Schools:
 
