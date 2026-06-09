@@ -231,7 +231,7 @@ For each school return:
 - "id": the id before the | on each line (e.g. "mit", "brown")
 - "name": school name
 - "fitScore": integer 0–100
-- "narrative": 1–2 sentences — WHY this student fits this school specifically
+- "narrative": 2–3 sentences — WHY this student fits this school specifically, not generic praise
 - "matchReasons": 2–3 short strings
 - "concerns": 1–2 short strings
 
