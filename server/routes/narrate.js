@@ -42,6 +42,26 @@ const FIT_PROXY = {
   'gu-q':  'georgetown',
 }
 
+// SAT gates by admit rate tier — keeps hyper-selective schools off mid-range profiles.
+// maxRate is inclusive upper bound; minSat is the floor to pass through.
+const SAT_GATES = [
+  { maxRate: 5,  minSat: 1540 },  // MIT, Stanford, Harvard, Yale, NYUAD
+  { maxRate: 10, minSat: 1500 },  // Princeton, Brown, Dartmouth, Duke, Cornell, etc.
+  { maxRate: 15, minSat: 1460 },  // Columbia, Johns Hopkins, Northwestern, Vanderbilt
+  { maxRate: 20, minSat: 1400 },  // Pomona, Swarthmore, Williams, Amherst, etc.
+]
+
+// Fiske data errors — correct known wrong admit rates
+const ADMIT_RATE_OVERRIDES = { 'upenn': 7 }
+
+function isAcademicallyEligible(sat, school) {
+  if (!sat) return true
+  const rate = ADMIT_RATE_OVERRIDES[school.id] ?? parseFloat(school.stats?.accepted)
+  if (isNaN(rate)) return true
+  const gate = SAT_GATES.find(g => rate <= g.maxRate)
+  return gate ? sat >= gate.minSat : true
+}
+
 function isFinanciallyEligible(efc, school) {
   if (NEED_BLIND_IDS.has(school.id)) return true
   if (EFC_MIN[school.id] !== undefined) return efc >= EFC_MIN[school.id]
@@ -136,6 +156,7 @@ router.post('/', async (req, res) => {
     const { schools, financial, schoolsById } = await loadData()
 
     const finById = Object.fromEntries(financial.map(f => [f.id, f]))
+    const sat = parseInt(testScores?.sat) || 0
 
     // Merge Fiske + financial, resolve branch-campus proxies
     const eligible = []
@@ -147,11 +168,10 @@ router.post('/', async (req, res) => {
       const fiskeProfile = schoolsByIdCache[fiskeId]
       if (!fiskeProfile) continue  // no Fiske data for this school
 
-      eligible.push({
-        ...fiskeProfile,
-        id: fin.id,        // keep the actual id (e.g. cmu-q, not carnegie-mellon)
-        name: fin.name,    // keep the actual display name from financial DB
-      })
+      const merged = { ...fiskeProfile, id: fin.id, name: fin.name }
+      if (!isAcademicallyEligible(sat, merged)) continue
+
+      eligible.push(merged)
     }
 
     if (eligible.length === 0) {
