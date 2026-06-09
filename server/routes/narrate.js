@@ -133,8 +133,6 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'EFC is required' })
     }
 
-    console.log('[narrate] efc received:', efc, typeof efc)
-
     const { schools, financial, schoolsById } = await loadData()
 
     const finById = Object.fromEntries(financial.map(f => [f.id, f]))
@@ -156,7 +154,6 @@ router.post('/', async (req, res) => {
       })
     }
 
-    console.log('[narrate] eligible:', eligible.length)
     if (eligible.length === 0) {
       return res.json({ schools: [] })
     }
