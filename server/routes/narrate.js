@@ -133,6 +133,8 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'EFC is required' })
     }
 
+    console.log('[narrate] efc received:', efc, typeof efc)
+
     const { schools, financial, schoolsById } = await loadData()
 
     const finById = Object.fromEntries(financial.map(f => [f.id, f]))
@@ -154,6 +156,7 @@ router.post('/', async (req, res) => {
       })
     }
 
+    console.log('[narrate] eligible:', eligible.length)
     if (eligible.length === 0) {
       return res.json({ schools: [] })
     }
@@ -196,6 +199,24 @@ ${schoolList}`
 
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
 
+    // Extract the outermost { ... } block — handles trailing prose after valid JSON.
+    function extractJSON(str) {
+      const start = str.indexOf('{')
+      if (start === -1) return str
+      let depth = 0, inStr = false, esc = false
+      for (let i = start; i < str.length; i++) {
+        const c = str[i]
+        if (esc)              { esc = false; continue }
+        if (c === '\\' && inStr) { esc = true; continue }
+        if (c === '"')        { inStr = !inStr; continue }
+        if (!inStr) {
+          if (c === '{') depth++
+          else if (c === '}' && --depth === 0) return str.slice(start, i + 1)
+        }
+      }
+      return str.slice(start)
+    }
+
     // Escape literal control characters that appear inside JSON string values.
     // Models occasionally emit unescaped newlines/tabs in narrative fields which
     // breaks JSON.parse even though the structure is otherwise valid.
@@ -219,33 +240,35 @@ ${schoolList}`
       return out
     }
 
+    const prepared = sanitizeControlChars(extractJSON(cleaned))
+
     let parsed
     try {
-      parsed = JSON.parse(sanitizeControlChars(cleaned))
+      parsed = JSON.parse(prepared)
     } catch (parseErr) {
       console.error('JSON parse failed:', parseErr.message)
 
       // Strategy 1: use error position to find last valid entry before the break
       const posMatch = parseErr.message.match(/position (\d+)/)
-      const breakPos = posMatch ? parseInt(posMatch[1]) : cleaned.length
-      const beforeBreak = cleaned.lastIndexOf('},', breakPos)
+      const breakPos = posMatch ? parseInt(posMatch[1]) : prepared.length
+      const beforeBreak = prepared.lastIndexOf('},', breakPos)
       if (beforeBreak > 10) {
-        try { parsed = JSON.parse(sanitizeControlChars(cleaned.slice(0, beforeBreak + 1) + ']}')) } catch (_) {}
+        try { parsed = JSON.parse(sanitizeControlChars(prepared.slice(0, beforeBreak + 1) + ']}')) } catch (_) {}
       }
 
       // Strategy 2: full-string fallback — last }, anywhere
       if (!parsed) {
-        const lastEntry = cleaned.lastIndexOf('},')
+        const lastEntry = prepared.lastIndexOf('},')
         if (lastEntry > 10) {
-          try { parsed = JSON.parse(sanitizeControlChars(cleaned.slice(0, lastEntry + 1) + ']}')) } catch (_) {}
+          try { parsed = JSON.parse(sanitizeControlChars(prepared.slice(0, lastEntry + 1) + ']}')) } catch (_) {}
         }
       }
 
       // Strategy 3: last } (final entry may lack trailing comma)
       if (!parsed) {
-        const lastBrace = cleaned.lastIndexOf('}')
+        const lastBrace = prepared.lastIndexOf('}')
         if (lastBrace > 10) {
-          try { parsed = JSON.parse(sanitizeControlChars(cleaned.slice(0, lastBrace + 1) + ']}')) } catch (_) {}
+          try { parsed = JSON.parse(sanitizeControlChars(prepared.slice(0, lastBrace + 1) + ']}')) } catch (_) {}
         }
       }
 
