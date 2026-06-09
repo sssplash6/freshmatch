@@ -42,24 +42,56 @@ const FIT_PROXY = {
   'gu-q':  'georgetown',
 }
 
-// SAT gates by admit rate tier — keeps hyper-selective schools off mid-range profiles.
-// maxRate is inclusive upper bound; minSat is the floor to pass through.
-const SAT_GATES = [
-  { maxRate: 5,  minSat: 1540 },  // MIT, Stanford, Harvard, Yale, NYUAD
-  { maxRate: 10, minSat: 1500 },  // Princeton, Brown, Dartmouth, Duke, Cornell, etc.
-  { maxRate: 15, minSat: 1460 },  // Columbia, Johns Hopkins, Northwestern, Vanderbilt
-  { maxRate: 20, minSat: 1400 },  // Pomona, Swarthmore, Williams, Amherst, etc.
+// Composite academic strength score (0–100) across SAT, GPA, honors, and ECs.
+// Honors level can compensate for a lower SAT — an olympiad winner with 1480 should
+// still reach elite schools; a 1470 with zero achievements should not.
+function academicStrength(testScores, honors, extracurriculars) {
+  let score = 0
+
+  // SAT (0–40)
+  const sat = parseInt(testScores?.sat) || 0
+  score += sat >= 1580 ? 40 : sat >= 1550 ? 34 : sat >= 1520 ? 28 :
+           sat >= 1490 ? 22 : sat >= 1460 ? 16 : sat >= 1420 ? 10 :
+           sat >= 1380 ?  5 : 0
+
+  // GPA normalized to /4 scale (0–20)
+  const gpa   = parseFloat(testScores?.gpa)
+  const scale = parseFloat(testScores?.gpaScale) || 4
+  if (gpa && scale) {
+    const norm = (gpa / scale) * 4
+    score += norm >= 3.9 ? 20 : norm >= 3.7 ? 15 : norm >= 3.5 ? 10 : norm >= 3.0 ? 5 : 0
+  }
+
+  // Honors (0–30, capped) — higher level awards carry much more weight
+  const honorPts = { intl: 15, natl: 10, regional: 5, school: 2 }
+  const honorsTotal = (honors || [])
+    .filter(h => h.title?.trim())
+    .reduce((sum, h) => sum + (honorPts[h.level] || 0), 0)
+  score += Math.min(honorsTotal, 30)
+
+  // ECs (0–10)
+  const filledEcs = (extracurriculars || []).filter(e => e.description?.trim()).length
+  score += Math.min(Math.round(filledEcs * 1.5), 10)
+
+  return score  // max ~100
+}
+
+// Minimum composite strength required per admit-rate tier
+const ACADEMIC_GATES = [
+  { maxRate: 5,  minStrength: 76 },  // MIT, Stanford, Harvard, Yale, NYUAD
+  { maxRate: 10, minStrength: 58 },  // Princeton, Brown, Dartmouth, Duke, Cornell
+  { maxRate: 15, minStrength: 44 },  // Columbia, JHU, Northwestern, Vanderbilt
+  { maxRate: 20, minStrength: 32 },  // Pomona, Swarthmore, Williams, Amherst
 ]
 
 // Fiske data errors — correct known wrong admit rates
 const ADMIT_RATE_OVERRIDES = { 'upenn': 7 }
 
-function isAcademicallyEligible(sat, school) {
-  if (!sat) return true
+function isAcademicallyEligible(strength, school) {
   const rate = ADMIT_RATE_OVERRIDES[school.id] ?? parseFloat(school.stats?.accepted)
   if (isNaN(rate)) return true
-  const gate = SAT_GATES.find(g => rate <= g.maxRate)
-  return gate ? sat >= gate.minSat : true
+  const gate = ACADEMIC_GATES.find(g => rate <= g.maxRate)
+  return gate ? strength >= gate.minStrength : true
 }
 
 function isFinanciallyEligible(efc, school) {
@@ -156,7 +188,7 @@ router.post('/', async (req, res) => {
     const { schools, financial, schoolsById } = await loadData()
 
     const finById = Object.fromEntries(financial.map(f => [f.id, f]))
-    const sat = parseInt(testScores?.sat) || 0
+    const strength = academicStrength(testScores, honors, extracurriculars)
 
     // Merge Fiske + financial, resolve branch-campus proxies
     const eligible = []
@@ -169,7 +201,7 @@ router.post('/', async (req, res) => {
       if (!fiskeProfile) continue  // no Fiske data for this school
 
       const merged = { ...fiskeProfile, id: fin.id, name: fin.name }
-      if (!isAcademicallyEligible(sat, merged)) continue
+      if (!isAcademicallyEligible(strength, merged)) continue
 
       eligible.push(merged)
     }
