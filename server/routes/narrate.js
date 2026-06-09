@@ -196,9 +196,32 @@ ${schoolList}`
 
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
 
+    // Escape literal control characters that appear inside JSON string values.
+    // Models occasionally emit unescaped newlines/tabs in narrative fields which
+    // breaks JSON.parse even though the structure is otherwise valid.
+    function sanitizeControlChars(str) {
+      let out = ''
+      let inString = false
+      let escaped = false
+      for (let i = 0; i < str.length; i++) {
+        const c = str[i]
+        if (escaped)          { out += c; escaped = false; continue }
+        if (c === '\\')       { out += c; escaped = true;  continue }
+        if (c === '"')        { inString = !inString; out += c; continue }
+        if (inString) {
+          if      (c === '\n') { out += '\\n'; continue }
+          else if (c === '\r') { out += '\\r'; continue }
+          else if (c === '\t') { out += '\\t'; continue }
+          else if (c.charCodeAt(0) < 0x20) { continue }
+        }
+        out += c
+      }
+      return out
+    }
+
     let parsed
     try {
-      parsed = JSON.parse(cleaned)
+      parsed = JSON.parse(sanitizeControlChars(cleaned))
     } catch (parseErr) {
       console.error('JSON parse failed:', parseErr.message)
 
@@ -207,14 +230,14 @@ ${schoolList}`
       const breakPos = posMatch ? parseInt(posMatch[1]) : cleaned.length
       const beforeBreak = cleaned.lastIndexOf('},', breakPos)
       if (beforeBreak > 10) {
-        try { parsed = JSON.parse(cleaned.slice(0, beforeBreak + 1) + ']}') } catch (_) {}
+        try { parsed = JSON.parse(sanitizeControlChars(cleaned.slice(0, beforeBreak + 1) + ']}')) } catch (_) {}
       }
 
       // Strategy 2: full-string fallback — last }, anywhere
       if (!parsed) {
         const lastEntry = cleaned.lastIndexOf('},')
         if (lastEntry > 10) {
-          try { parsed = JSON.parse(cleaned.slice(0, lastEntry + 1) + ']}') } catch (_) {}
+          try { parsed = JSON.parse(sanitizeControlChars(cleaned.slice(0, lastEntry + 1) + ']}')) } catch (_) {}
         }
       }
 
@@ -222,7 +245,7 @@ ${schoolList}`
       if (!parsed) {
         const lastBrace = cleaned.lastIndexOf('}')
         if (lastBrace > 10) {
-          try { parsed = JSON.parse(cleaned.slice(0, lastBrace + 1) + ']}') } catch (_) {}
+          try { parsed = JSON.parse(sanitizeControlChars(cleaned.slice(0, lastBrace + 1) + ']}')) } catch (_) {}
         }
       }
 
