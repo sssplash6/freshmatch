@@ -275,7 +275,10 @@ ${schoolList}`
     // Hard guard — two passes:
     // 1. Discard any school whose id wasn't in the financially-eligible list
     // 2. Overwrite name with our authoritative value (immune to AI misspellings)
-    const results = (parsed.schools || [])
+    const aiSchools = (parsed.schools || [])
+      .map(s => ({ ...s, id: s.id?.replace(/^\[|\]$/g, '') }))
+
+    const results = aiSchools
       .filter(s => eligibleMap.has(s.id))
       .map(s => ({ ...s, name: eligibleMap.get(s.id).name }))
 
