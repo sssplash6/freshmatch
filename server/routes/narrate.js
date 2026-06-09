@@ -116,7 +116,7 @@ function compressSchool(school) {
   const accept   = school.stats?.accepted ? `${school.stats.accepted}% admit` : ''
   const programs = (school.strongPrograms || []).slice(0, 3).join(', ')
   return [
-    `[${school.id}] ${school.name}${accept ? ` (${accept})` : ''}`,
+    `${school.id} | ${school.name}${accept ? ` (${accept})` : ''}`,
     programs ? `Programs: ${programs}` : '',
     school.academicEnvironment ? `Feel: ${school.academicEnvironment.slice(0, 120)}` : '',
     school.bestForStudents ? `For: ${school.bestForStudents.slice(0, 80)}` : '',
@@ -176,7 +176,7 @@ ${studentSummary}
 Pick the 10–14 best matches from the ${pool.length} schools below. ONLY use schools from this list.
 
 For each school return:
-- "id": exact bracketed [id]
+- "id": the id before the | on each line (e.g. "mit", "brown")
 - "name": school name
 - "fitScore": integer 0–100
 - "narrative": 1–2 sentences — WHY this student fits this school specifically
@@ -275,8 +275,7 @@ ${schoolList}`
     // Hard guard — two passes:
     // 1. Discard any school whose id wasn't in the financially-eligible list
     // 2. Overwrite name with our authoritative value (immune to AI misspellings)
-    const aiSchools = (parsed.schools || [])
-      .map(s => ({ ...s, id: s.id?.replace(/^\[|\]$/g, '') }))
+    const aiSchools = parsed.schools || []
 
     const results = aiSchools
       .filter(s => eligibleMap.has(s.id))
