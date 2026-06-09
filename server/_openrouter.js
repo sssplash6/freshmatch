@@ -8,6 +8,7 @@ export async function chat(messages, { systemPrompt, max_tokens, response_format
       ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
       ...messages,
     ],
+    temperature: 0,
     ...(max_tokens       && { max_tokens }),
     ...(response_format  && { response_format }),
   };
