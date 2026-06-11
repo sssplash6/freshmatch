@@ -17,7 +17,7 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
-        value: ~anthropic/claude-sonnet-latest
+        value: anthropic/claude-sonnet-4.6
       # SQLite file on the mounted disk. Submissions are stored when this is set.
       - key: DATABASE_PATH
         value: /var/data/submissions.sqlite
