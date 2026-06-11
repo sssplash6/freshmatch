@@ -56,7 +56,6 @@ function LoadingBar() {
 import '../styles/Results.css'
 import { useQuiz } from '../context/QuizContext'
 import { schoolBadge } from '../data/schoolLogos'
-import PersonalityBadge from '../components/PersonalityBadge'
 
 const MAX_SCHOOLS = 12
 
@@ -356,12 +355,11 @@ function DreamSchoolTile({ school, onExpand, index, invisible }) {
 
 export default function Results() {
   const { state, dispatch } = useQuiz()
-  const { name, country, grade, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc } = state
+  const { name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc } = state
 
   const [status, setStatus]         = useState('loading')
   const [schools, setSchools]       = useState([])
   const [dreamResults, setDreamResults] = useState([])
-  const [personalityType, setPersonalityType] = useState(null)
   const [errorMsg, setErrorMsg]     = useState('')
   const [expandedIndex, setExpandedIndex] = useState(null)
   const [expandedPool, setExpandedPool]   = useState('regular') // 'regular' | 'dream'
@@ -377,14 +375,16 @@ export default function Results() {
         const res = await fetch('/api/narrate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, country, grade, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc }),
+          // Send the complete quiz state so the full submission can be stored.
+          // email/schoolName/section1Answers aren't used for matching, but are
+          // captured for the saved record.
+          body: JSON.stringify({ name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || `Server error ${res.status}`)
         if (!cancelled) {
           setDreamResults((data.dreamSchools || []).slice(0, 3))
           setSchools((data.schools || []).slice(0, MAX_SCHOOLS))
-          setPersonalityType(data.personalityType || null)
           setStatus('done')
         }
       } catch (err) {
@@ -450,7 +450,6 @@ export default function Results() {
 
             {status === 'done' && (
               <>
-                {personalityType && <PersonalityBadge type={personalityType} />}
                 <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
                 <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
                   {totalCount > 0

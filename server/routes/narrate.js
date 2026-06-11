@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { Router } from 'express'
 import { chat } from '../_openrouter.js'
+import { saveSubmission } from '../db.js'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
 const DATA = join(__dir, '../data')
@@ -296,9 +297,13 @@ router.post('/', async (req, res) => {
 
     cacheKey = JSON.stringify({ name, country, grade, testScores, extracurriculars, honors, essay, personality, majors, dreamSchools, efc })
     if (responseCache.has(cacheKey)) {
-      return res.json(responseCache.get(cacheKey))
+      const payload = responseCache.get(cacheKey)
+      saveSubmission(req.body, payload)  // different user, same academic profile → still record it
+      return res.json(payload)
     }
     if (inflight.has(cacheKey)) {
+      // A concurrent duplicate of THIS request (e.g. React StrictMode double-mount).
+      // The original request records the submission; don't double-count it here.
       const payload = await inflight.get(cacheKey)
       return res.json(payload)
     }
@@ -344,7 +349,11 @@ router.post('/', async (req, res) => {
     }
 
     if (eligible.length === 0 && dreamPool.length === 0) {
-      return res.json({ schools: [], dreamSchools: [] })
+      const empty = { schools: [], dreamSchools: [] }
+      saveSubmission(req.body, empty)  // fire-and-forget; never blocks the response
+      settleInflight?.resolve(empty)
+      inflight.delete(cacheKey)
+      return res.json(empty)
     }
 
     // Cap to avoid ballooning input tokens for high-EFC students.
@@ -583,6 +592,7 @@ No markdown, no extra keys. Output "personalityType" first, then generate "dream
     const payload = { personalityType, schools: results, dreamSchools: dreamResults }
     if (responseCache.size >= CACHE_MAX) responseCache.delete(responseCache.keys().next().value)
     responseCache.set(cacheKey, payload)
+    saveSubmission(req.body, payload)  // fire-and-forget; one row per fresh computation
     settleInflight?.resolve(payload)
     inflight.delete(cacheKey)
     res.json(payload)

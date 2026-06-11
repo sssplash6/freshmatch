@@ -4,11 +4,24 @@ services:
     runtime: node
     buildCommand: npm install
     startCommand: npm start
+    # Persistent disk for the SQLite submissions database. Survives deploys and
+    # restarts. Note: a disk pins the service to a single instance and makes
+    # deploys briefly non-zero-downtime.
+    disk:
+      name: calc-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
         value: ~anthropic/claude-sonnet-latest
+      # SQLite file on the mounted disk. Submissions are stored when this is set.
+      - key: DATABASE_PATH
+        value: /var/data/submissions.sqlite
+      # Token guarding GET /api/submissions. Endpoint is disabled when unset.
+      - key: ADMIN_TOKEN
+        sync: false
 
   - type: static
     name: calc-frontend

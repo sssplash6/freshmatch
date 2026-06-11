@@ -68,6 +68,9 @@ export default function TestScoresInput({
   const unadded = OPTIONAL.filter(t => testScores[t.field] === null)
   const added   = OPTIONAL.filter(t => testScores[t.field] !== null)
 
+  // GPA, IELTS, and SAT are all required — students without a given score enter "N/A".
+  const canContinue = REQUIRED.every(({ field }) => String(testScores[field] ?? '').trim())
+
   return (
     <div className={`question-slide slide-${direction}`}>
       <div className="slide-header">
@@ -76,6 +79,9 @@ export default function TestScoresInput({
       </div>
 
       <div className="question-text">What standardized test scores do you have?</div>
+      <div className="question-hint">
+        GPA, IELTS, and SAT are required. Enter <strong>N/A</strong> for any you don't have.
+      </div>
 
       <div className="test-scores-list">
         {REQUIRED.map(({ field, label }) => (
@@ -84,7 +90,7 @@ export default function TestScoresInput({
             <input
               className="test-input test-score-input"
               type="text"
-              placeholder="Score"
+              placeholder="Score or N/A"
               value={testScores[field]}
               onChange={e => onUpdate(field, e.target.value)}
             />
@@ -124,7 +130,12 @@ export default function TestScoresInput({
 
       <div className="slide-footer">
         <button className="back-btn" onClick={onBack}>← Back</button>
-        <button className="next-btn active" onClick={onNext}>Continue →</button>
+        <button
+          className={`next-btn${canContinue ? ' active' : ''}`}
+          onClick={canContinue ? onNext : undefined}
+        >
+          Continue →
+        </button>
       </div>
     </div>
   )

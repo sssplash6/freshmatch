@@ -24,6 +24,10 @@ export default function EcsInput({
   const lastRef = useRef(null)
   const prevLengthRef = useRef(extracurriculars.length)
 
+  // At least 5 activities must be filled in before continuing.
+  const filledCount = extracurriculars.filter(e => e.description.trim()).length
+  const canContinue = filledCount >= MIN
+
   useEffect(() => {
     if (extracurriculars.length > prevLengthRef.current && lastRef.current) {
       lastRef.current.focus()
@@ -71,7 +75,12 @@ export default function EcsInput({
 
       <div className="slide-footer">
         <button className="back-btn" onClick={onBack}>← Back</button>
-        <button className="next-btn active" onClick={onNext}>Continue →</button>
+        <button
+          className={`next-btn${canContinue ? ' active' : ''}`}
+          onClick={canContinue ? onNext : undefined}
+        >
+          Continue →
+        </button>
       </div>
     </div>
   )

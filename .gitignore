@@ -3,6 +3,11 @@
 .env.local
 .env.*.local
 
+# SQLite submission database (local testing)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
 # Logs
 logs
 *.log
