@@ -9,6 +9,7 @@ export async function chat(messages, { systemPrompt, max_tokens, response_format
       ...messages,
     ],
     temperature: 0,
+    seed: 42, // honored by providers that support it; ignored otherwise
     ...(max_tokens       && { max_tokens }),
     ...(response_format  && { response_format }),
   };

@@ -1,5 +1,5 @@
 import { useQuiz } from '../context/QuizContext'
-import { section1 } from '../data/questions'
+import { buildSection1 } from '../data/questions'
 import ProgressBar from '../components/ProgressBar'
 import QuestionSlide from '../components/QuestionSlide'
 import TestScoresInput from '../components/TestScoresInput'
@@ -7,17 +7,19 @@ import EcsInput from '../components/EcsInput'
 import HonorsInput from '../components/HonorsInput'
 import EssayInput from '../components/EssayInput'
 import EfcSlide from '../components/EfcSlide'
-
-const TOTAL_QUESTIONS = section1.length
+import DreamSchoolSearch from '../components/DreamSchoolSearch'
+import MajorSearch from '../components/MajorSearch'
 
 export default function Section1() {
   const { state, dispatch } = useQuiz()
-  const { currentIndex, section1Answers, testScores, extracurriculars, honors, essay, efc, direction } = state
+  const { currentIndex, section1Answers, personalityAnswers, testScores, extracurriculars, honors, essay, majors, dreamSchools, efc, direction } = state
 
-  const question = section1[currentIndex]
+  const questions = buildSection1(essay)
+  const totalQuestions = questions.length
+  const question = questions[currentIndex]
   const selectedLetter = section1Answers[currentIndex] ?? null
   const overall = currentIndex + 1
-  const percent = (overall / TOTAL_QUESTIONS) * 100
+  const percent = (overall / totalQuestions) * 100
 
   function handleSelect(letter) {
     dispatch({ type: 'ANSWER', letter })
@@ -34,7 +36,7 @@ export default function Section1() {
   const sharedProps = {
     direction,
     sectionLabel: 'Section 1 — Portfolio',
-    counter: `${overall} / ${TOTAL_QUESTIONS}`,
+    counter: `${overall} / ${totalQuestions}`,
     onNext: handleNext,
     onBack: handleBack,
   }
@@ -76,12 +78,36 @@ export default function Section1() {
           onUpdate={value => dispatch({ type: 'UPDATE_ESSAY', value })}
           {...sharedProps}
         />
+      ) : question.type === 'majors' ? (
+        <MajorSearch
+          key={question.id}
+          value={majors}
+          onChange={value => dispatch({ type: 'SET_MAJORS', value })}
+          {...sharedProps}
+        />
+      ) : question.type === 'dream-schools' ? (
+        <DreamSchoolSearch
+          key={question.id}
+          value={dreamSchools}
+          onChange={value => dispatch({ type: 'SET_DREAM_SCHOOLS', value })}
+          {...sharedProps}
+        />
       ) : question.type === 'efc' ? (
         <EfcSlide
           key={question.id}
           efc={efc}
           onUpdate={value => dispatch({ type: 'SET_EFC', value })}
           {...sharedProps}
+        />
+      ) : question.type === 'personality' ? (
+        <QuestionSlide
+          key={question.id}
+          question={question}
+          selectedLetter={personalityAnswers[question.id] ?? null}
+          onSelect={letter => dispatch({ type: 'ANSWER_PERSONALITY', id: question.id, letter })}
+          showBack={currentIndex > 0}
+          {...sharedProps}
+          sectionLabel="Section 1 — Personality"
         />
       ) : (
         <QuestionSlide

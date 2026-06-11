@@ -1,0 +1,176 @@
+/* ── Dream school search ─────────────────────────────── */
+.dsearch-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+/* Selected chips */
+.dsearch-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.dsearch-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--rule-strong);
+  background: rgba(245, 239, 228, 0.04);
+  transition: border-color 160ms ease;
+}
+
+[data-theme="light"] .dsearch-chip {
+  background: rgba(11, 29, 56, 0.03);
+}
+
+.dsearch-chip__name {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.dsearch-chip__remove {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--faint);
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.dsearch-chip__remove:hover {
+  color: var(--ink);
+  border-color: var(--rule-strong);
+  background: rgba(245, 239, 228, 0.08);
+}
+
+[data-theme="light"] .dsearch-chip__remove:hover {
+  background: rgba(11, 29, 56, 0.07);
+}
+
+/* Input */
+.dsearch-input-wrap {
+  position: relative;
+}
+
+.dsearch-input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--rule-strong);
+  background: rgba(245, 239, 228, 0.04);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 160ms ease;
+}
+
+.dsearch-input::placeholder {
+  color: var(--faint);
+}
+
+.dsearch-input:focus {
+  border-color: rgba(241, 141, 5, 0.55);
+}
+
+[data-theme="light"] .dsearch-input {
+  background: rgba(11, 29, 56, 0.03);
+}
+
+/* Dropdown */
+.dsearch-dropdown {
+  position: fixed;
+  z-index: 100;
+  background: var(--bg);
+  border: 1px solid var(--rule-strong);
+  border-radius: 11px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+[data-theme="light"] .dsearch-dropdown {
+  box-shadow: 0 8px 24px rgba(11, 29, 56, 0.14);
+}
+
+.dsearch-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease;
+}
+
+.dsearch-option:hover {
+  background: rgba(245, 239, 228, 0.07);
+}
+
+[data-theme="light"] .dsearch-option:hover {
+  background: rgba(11, 29, 56, 0.05);
+}
+
+.dsearch-option__name {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.dsearch-empty {
+  padding: 12px 14px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+/* Logo badge (shared chip + dropdown) */
+.dsearch-logo {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.dsearch-logo--img {
+  background: #fbf9f4;
+  padding: 4px;
+}
+
+.dsearch-logo--img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.dsearch-logo--mono {
+  border: 1px solid var(--rule);
+  color: var(--muted);
+}

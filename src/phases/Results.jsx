@@ -56,8 +56,9 @@ function LoadingBar() {
 import '../styles/Results.css'
 import { useQuiz } from '../context/QuizContext'
 import { schoolBadge } from '../data/schoolLogos'
+import PersonalityBadge from '../components/PersonalityBadge'
 
-const MAX_SCHOOLS = 14
+const MAX_SCHOOLS = 12
 
 const PROGRAMS = {
   'full-support': {
@@ -152,20 +153,11 @@ function SchoolTile({ school, index, onExpand, invisible }) {
       <div className="school-tile__score">{school.fitScore}</div>
       <LogoBadge id={school.id} name={school.name} size="tile" />
       <div className="school-tile__name">{school.name}</div>
-      {/* Radial shine following cursor */}
-      <motion.div
-        className="school-tile__shine"
-        style={{
-          background: `radial-gradient(circle at ${(mouse.x + 0.5) * 100}% ${(mouse.y + 0.5) * 100}%, rgba(241, 141, 5, 0.28) 0%, transparent 18%)`,
-        }}
-        animate={{ opacity: hovered ? 1 : 0 }}
-        transition={{ duration: 0.12 }}
-      />
     </motion.div>
   )
 }
 
-function ExpandedSchool({ school, index, total, onClose, onNav, navDirRef }) {
+function ExpandedSchool({ school, index, total, isDream, onClose, onNav, navDirRef }) {
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') onClose()
@@ -216,6 +208,12 @@ function ExpandedSchool({ school, index, total, onClose, onNav, navDirRef }) {
                     <div className="school-expanded__score-row">
                       <span className="school-expanded__score">{school.fitScore}</span>
                       <span className="school-expanded__score-label">fit score</span>
+                      {isDream && school.chance != null && (
+                        <>
+                          <span className="school-expanded__score school-expanded__score--chance">{school.chance}</span>
+                          <span className="school-expanded__score-label">admission chance</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -301,15 +299,76 @@ function CtaSection({ rec }) {
   )
 }
 
+// Glow follows FIT (same bands as regular tiles): ≥85 green, 75–84 orange, <75 red
+function dreamGlowClass(fitScore) {
+  if (fitScore >= 85) return 'dream-tile-wrap--green'
+  if (fitScore >= 75) return 'dream-tile-wrap--orange'
+  return 'dream-tile-wrap--red'
+}
+
+function DreamSchoolTile({ school, onExpand, index, invisible }) {
+  const [mouse, setMouse] = useState({ x: 0, y: 0 })
+  const [hovered, setHovered] = useState(false)
+
+  const handleMove = useCallback((e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    setMouse({ x: (e.clientX - r.left) / r.width - 0.5, y: (e.clientY - r.top) / r.height - 0.5 })
+  }, [])
+
+  const handleLeave = useCallback(() => {
+    setHovered(false)
+    setMouse({ x: 0, y: 0 })
+  }, [])
+
+  return (
+    <div
+      className={`dream-tile-wrap ${dreamGlowClass(school.fitScore)}`}
+      style={{ opacity: invisible ? 0 : 1, pointerEvents: invisible ? 'none' : 'auto' }}
+    >
+      <motion.div
+        className="dream-tile"
+        style={{ transformStyle: 'preserve-3d', transformPerspective: 800 }}
+        onMouseMove={handleMove}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={handleLeave}
+        onClick={() => onExpand(index)}
+        animate={{
+          rotateX: hovered ? mouse.y * -20 : 0,
+          rotateY: hovered ? mouse.x * 20 : 0,
+        }}
+        transition={{ type: 'spring', stiffness: 360, damping: 26 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <div className="dream-tile__fit">
+          {school.fitScore}
+          <span className="dream-tile__score-label">fit</span>
+        </div>
+        <div className="dream-tile__score">
+          {school.chance ?? school.fitScore}
+          <span className="dream-tile__score-label">chance</span>
+        </div>
+        <LogoBadge id={school.id} name={school.name} size="tile" />
+        <div className="dream-tile__name">{school.name}</div>
+      </motion.div>
+    </div>
+  )
+}
+
 export default function Results() {
   const { state, dispatch } = useQuiz()
-  const { name, testScores, extracurriculars, honors, essay, efc } = state
+  const { name, country, grade, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc } = state
 
-  const [status, setStatus]     = useState('loading')
-  const [schools, setSchools]   = useState([])
-  const [errorMsg, setErrorMsg] = useState('')
+  const [status, setStatus]         = useState('loading')
+  const [schools, setSchools]       = useState([])
+  const [dreamResults, setDreamResults] = useState([])
+  const [personalityType, setPersonalityType] = useState(null)
+  const [errorMsg, setErrorMsg]     = useState('')
   const [expandedIndex, setExpandedIndex] = useState(null)
+  const [expandedPool, setExpandedPool]   = useState('regular') // 'regular' | 'dream'
   const navDirRef = useRef(0)
+
+  // Unified pool for expanded modal navigation (dream first, then regular)
+  const allSchools = [...dreamResults, ...schools]
 
   useEffect(() => {
     let cancelled = false
@@ -318,12 +377,14 @@ export default function Results() {
         const res = await fetch('/api/narrate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, testScores, extracurriculars, honors, essay, efc }),
+          body: JSON.stringify({ name, country, grade, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || `Server error ${res.status}`)
         if (!cancelled) {
+          setDreamResults((data.dreamSchools || []).slice(0, 3))
           setSchools((data.schools || []).slice(0, MAX_SCHOOLS))
+          setPersonalityType(data.personalityType || null)
           setStatus('done')
         }
       } catch (err) {
@@ -346,9 +407,9 @@ export default function Results() {
     navDirRef.current = direction
     setExpandedIndex(prev => {
       const next = prev + direction
-      return next < 0 || next >= schools.length ? prev : next
+      return next < 0 || next >= allSchools.length ? prev : next
     })
-  }, [schools.length])
+  }, [allSchools.length])
 
   const handleClose = useCallback(() => {
     navDirRef.current = 0
@@ -357,9 +418,11 @@ export default function Results() {
 
   const rec = getRecommendation(testScores, honors, extracurriculars)
 
-  const cols = schools.length <= 4
+  const regularCols = schools.length <= 4
     ? (schools.length || 1)
-    : Math.min(7, Math.ceil(schools.length / 2))
+    : Math.min(6, Math.ceil(schools.length / 2))
+
+  const totalCount = dreamResults.length + schools.length
 
   return (
     <>
@@ -387,14 +450,15 @@ export default function Results() {
 
             {status === 'done' && (
               <>
+                {personalityType && <PersonalityBadge type={personalityType} />}
                 <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
                 <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
-                  {schools.length > 0
-                    ? `${schools.length} schools for ${name || 'you'}`
+                  {totalCount > 0
+                    ? `${totalCount} schools for ${name || 'you'}`
                     : 'No financial matches found'}
                 </div>
                 <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
-                  {schools.length > 0
+                  {totalCount > 0
                     ? 'Tap any school to see your full fit analysis.'
                     : 'No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.'}
                 </p>
@@ -402,15 +466,52 @@ export default function Results() {
             )}
           </div>
 
-          {status === 'done' && schools.length > 0 && (
+          {/* ── Dream schools row ─── */}
+          {status === 'done' && dreamResults.length > 0 && (
             <motion.div
-              className="school-grid"
-              style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+              className="dream-schools-section"
               initial="hidden"
               animate="visible"
               variants={{
                 hidden: {},
-                visible: { transition: { staggerChildren: 0.05, delayChildren: 0.18 } },
+                visible: { transition: { staggerChildren: 0.06, delayChildren: 0.12 } },
+              }}
+            >
+              <div className="dream-schools-eyebrow">Your dream schools</div>
+              <div className="dream-schools-grid">
+                {dreamResults.map((school, i) => (
+                  <motion.div
+                    key={school.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 22, scale: 0.93 },
+                      visible: {
+                        opacity: 1, y: 0, scale: 1,
+                        transition: { type: 'spring', stiffness: 240, damping: 22 },
+                      },
+                    }}
+                  >
+                    <DreamSchoolTile
+                      school={school}
+                      index={i}
+                      onExpand={handleExpand}
+                      invisible={expandedIndex === i}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Regular matches grid ─── */}
+          {status === 'done' && schools.length > 0 && (
+            <motion.div
+              className="school-grid"
+              style={{ gridTemplateColumns: `repeat(${regularCols}, 1fr)` }}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.04, delayChildren: dreamResults.length > 0 ? 0.32 : 0.18 } },
               }}
             >
               {schools.map((school, i) => (
@@ -427,15 +528,15 @@ export default function Results() {
                   <SchoolTile
                     school={school}
                     index={i}
-                    onExpand={handleExpand}
-                    invisible={expandedIndex === i}
+                    onExpand={(idx) => handleExpand(idx + dreamResults.length)}
+                    invisible={expandedIndex === i + dreamResults.length}
                   />
                 </motion.div>
               ))}
             </motion.div>
           )}
 
-          {status === 'done' && schools.length > 0 && (
+          {status === 'done' && totalCount > 0 && (
             <div className="results-scroll-nudge">
               <span>Your next step</span>
               <span className="nudge-arrow">↓</span>
@@ -444,7 +545,7 @@ export default function Results() {
         </div>
 
         {/* ── CTA: always below the fold ── */}
-        {status === 'done' && schools.length > 0 && <CtaSection rec={rec} />}
+        {status === 'done' && totalCount > 0 && <CtaSection rec={rec} />}
 
         <div className="results-divider res-rise" style={{ animationDelay: '200ms' }} />
         <div className="results-actions res-rise" style={{ animationDelay: '240ms' }}>
@@ -455,12 +556,13 @@ export default function Results() {
       </div>
 
       <AnimatePresence>
-        {expandedIndex !== null && schools[expandedIndex] && (
+        {expandedIndex !== null && allSchools[expandedIndex] && (
           <ExpandedSchool
             key="expanded"
-            school={schools[expandedIndex]}
+            school={allSchools[expandedIndex]}
             index={expandedIndex}
-            total={schools.length}
+            total={allSchools.length}
+            isDream={expandedIndex < dreamResults.length}
             onClose={handleClose}
             onNav={handleNav}
             navDirRef={navDirRef}

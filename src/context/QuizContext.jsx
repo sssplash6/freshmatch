@@ -1,16 +1,22 @@
 import { createContext, useContext, useReducer } from 'react'
-import { section1 } from '../data/questions'
+import { buildSection1 } from '../data/questions'
 
 export const initialState = {
   phase: 'landing',
   currentIndex: 0,
   name: '',
   email: '',
+  country: '',
+  schoolName: '',
+  grade: '',
   section1Answers: [],
+  personalityAnswers: {},
   testScores: { gpa: '', gpaScale: '4', ielts: '', sat: '', alevels: null, ib: null, ap: null },
   extracurriculars: Array(5).fill(null).map(() => ({ description: '' })),
   honors: [{ title: '', level: '', participants: '' }],
   essay: '',
+  majors: [],
+  dreamSchools: [],
   efc: null,
   direction: 'forward',
 }
@@ -25,11 +31,22 @@ export function quizReducer(state, action) {
       return { ...state, name: action.value }
     case 'SET_EMAIL':
       return { ...state, email: action.value }
+    case 'SET_COUNTRY':
+      return { ...state, country: action.value }
+    case 'SET_SCHOOL_NAME':
+      return { ...state, schoolName: action.value }
+    case 'SET_GRADE':
+      return { ...state, grade: action.value }
     case 'ANSWER': {
       const answers = [...state.section1Answers]
       answers[state.currentIndex] = action.letter
       return { ...state, section1Answers: answers }
     }
+    case 'ANSWER_PERSONALITY':
+      return {
+        ...state,
+        personalityAnswers: { ...state.personalityAnswers, [action.id]: action.letter },
+      }
     case 'NEXT': {
       if (state.phase === 'intake') {
         if (state.currentIndex === 0) {
@@ -38,7 +55,7 @@ export function quizReducer(state, action) {
         return { ...state, phase: 'section1', currentIndex: 0, direction: 'forward' }
       }
       if (state.phase === 'section1') {
-        if (state.currentIndex < section1.length - 1) {
+        if (state.currentIndex < buildSection1(state.essay).length - 1) {
           return { ...state, currentIndex: state.currentIndex + 1, direction: 'forward' }
         }
         return { ...state, phase: 'results', direction: 'forward' }
@@ -52,8 +69,11 @@ export function quizReducer(state, action) {
         }
         return { ...state, currentIndex: 0, direction: 'back' }
       }
-      if (state.phase === 'section1' && state.currentIndex > 0) {
-        return { ...state, currentIndex: state.currentIndex - 1, direction: 'back' }
+      if (state.phase === 'section1') {
+        if (state.currentIndex > 0) {
+          return { ...state, currentIndex: state.currentIndex - 1, direction: 'back' }
+        }
+        return { ...state, phase: 'intake', currentIndex: 0, direction: 'back' }
       }
       return state
     }
@@ -85,6 +105,10 @@ export function quizReducer(state, action) {
       return { ...state, testScores: { ...state.testScores, [action.field]: null } }
     case 'UPDATE_ESSAY':
       return { ...state, essay: action.value }
+    case 'SET_MAJORS':
+      return { ...state, majors: action.value }
+    case 'SET_DREAM_SCHOOLS':
+      return { ...state, dreamSchools: action.value }
     case 'SET_EFC':
       return { ...state, efc: action.value }
     case 'RESTART':

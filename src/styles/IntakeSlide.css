@@ -49,3 +49,33 @@
 .intake-input:focus {
   border-bottom-color: var(--orange);
 }
+
+.grade-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.grade-pill {
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.grade-pill:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.grade-pill.selected {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+}

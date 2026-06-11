@@ -163,8 +163,12 @@ const META = {
   'sweet-briar':     { slug: 'sweet-briar', monogram: 'SBC' },
   'bard':            { slug: 'bard',        monogram: 'Bar' },
 
+  // Business schools
+  'babson':          { slug: null,           monogram: 'Bab'  },
+
   // Global satellite campuses
   'cmu-q':           { slug: 'cmu',         monogram: 'CMU-Q'},
+  'dku':             { slug: null,           monogram: 'DKU'  },
   'gu-q':            { slug: 'gu-q',        monogram: 'GU-Q' },
   'nyush':           { slug: 'nyush',       monogram: 'NYUSH'},
 }

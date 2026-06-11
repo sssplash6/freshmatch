@@ -1076,5 +1076,33 @@
     "aidPolicy": "Need-Based",
     "noAid": false,
     "avgAid": null
+  },
+  {
+    "id": "caltech",
+    "name": "California Institute of Technology",
+    "aidPolicy": "Need",
+    "noAid": false,
+    "avgAid": 82706
+  },
+  {
+    "id": "uchicago",
+    "name": "University of Chicago",
+    "aidPolicy": "Need & Merit",
+    "noAid": false,
+    "avgAid": 65118
+  },
+  {
+    "id": "babson",
+    "name": "Babson College",
+    "aidPolicy": "Need & Merit",
+    "noAid": false,
+    "avgAid": 51281
+  },
+  {
+    "id": "dku",
+    "name": "Duke Kunshan University",
+    "aidPolicy": "Need & Merit",
+    "noAid": false,
+    "avgAid": null
   }
 ]

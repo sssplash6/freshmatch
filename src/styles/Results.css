@@ -184,13 +184,6 @@
   word-break: break-word;
 }
 
-.school-tile__shine {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-}
-
 /* ── Logo badge (shared between tile + expanded) ──────── */
 .sc-logo {
   flex-shrink: 0;
@@ -382,6 +375,10 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--orange);
+}
+
+.school-expanded__score--chance {
+  margin-left: 10px;
 }
 
 .school-expanded__score-label {
@@ -692,6 +689,191 @@
 }
 
 .restart-btn:hover { color: var(--ink); }
+
+/* ── Dream schools section ───────────────────────────── */
+.dream-schools-section {
+  margin-bottom: 14px;
+}
+
+.dream-schools-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 10px;
+}
+
+.dream-schools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* ── Dream tile wrapper — holds the animated border ──── */
+.dream-tile-wrap {
+  position: relative;
+  border-radius: 15px;
+  padding: 1.5px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Spinning conic-gradient that creates the flowing border */
+.dream-tile-wrap::before {
+  content: '';
+  position: absolute;
+  aspect-ratio: 1;
+  width: 200%;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  animation: dreamBorderSpin 5s linear infinite;
+}
+
+.dream-tile-wrap--green::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(22, 163, 74, 0.85) 18%,
+    rgba(34, 197, 94, 0.6) 28%,
+    transparent 40%,
+    transparent 60%,
+    rgba(22, 163, 74, 0.55) 75%,
+    rgba(34, 197, 94, 0.35) 83%,
+    transparent 95%
+  );
+}
+
+.dream-tile-wrap--orange::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(241, 141, 5, 0.85) 18%,
+    rgba(255, 154, 31, 0.6) 28%,
+    transparent 40%,
+    transparent 60%,
+    rgba(241, 141, 5, 0.55) 75%,
+    rgba(255, 154, 31, 0.35) 83%,
+    transparent 95%
+  );
+}
+
+.dream-tile-wrap--red::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(185, 28, 28, 0.80) 18%,
+    rgba(220, 38, 38, 0.55) 28%,
+    transparent 40%,
+    transparent 60%,
+    rgba(185, 28, 28, 0.50) 75%,
+    rgba(220, 38, 38, 0.32) 83%,
+    transparent 95%
+  );
+}
+
+@keyframes dreamBorderSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dream-tile-wrap::before { animation: none; }
+  .dream-tile-wrap--green::before  { background: rgba(22, 163, 74, 0.5);  }
+  .dream-tile-wrap--orange::before { background: rgba(241, 141, 5, 0.5);  }
+  .dream-tile-wrap--red::before    { background: rgba(185, 28, 28, 0.45); }
+}
+
+/* Ambient glow via box-shadow */
+.dream-tile-wrap--green {
+  box-shadow: 0 0 18px 0 rgba(22, 163, 74, 0.22);
+}
+
+.dream-tile-wrap--orange {
+  box-shadow: 0 0 18px 0 rgba(241, 141, 5, 0.22);
+}
+
+.dream-tile-wrap--red {
+  box-shadow: 0 0 18px 0 rgba(185, 28, 28, 0.20);
+}
+
+/* Inner card surface — fills the wrap, showing only 1.5px border */
+.dream-tile {
+  position: relative;
+  background: var(--bg);
+  border-radius: 13.5px;
+  padding: 14px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 130px;
+  overflow: hidden;
+  user-select: none;
+  transition: background 160ms ease;
+}
+
+[data-theme="light"] .dream-tile {
+  background: #ffffff;
+}
+
+.dream-tile__score {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dream-tile__fit {
+  position: absolute;
+  top: 8px;
+  left: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--orange);
+}
+
+.dream-tile__score-label {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dream-tile-wrap--green  .dream-tile__score { color: #22c55e; }
+.dream-tile-wrap--orange .dream-tile__score { color: var(--orange); }
+.dream-tile-wrap--red    .dream-tile__score { color: #ef4444; }
+
+[data-theme="light"] .dream-tile-wrap--red .dream-tile__score { color: #dc2626; }
+
+.dream-tile__name {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
 
 /* ── Light theme tile adjustments ─────────────────────── */
 [data-theme="light"] .school-tile {
