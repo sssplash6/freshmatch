@@ -7,46 +7,6 @@
   max-width: 30rem;
 }
 
-.pb-medallion {
-  position: relative;
-  width: 84px;
-  height: 84px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: linear-gradient(150deg, var(--pb-c1), var(--pb-c2));
-  box-shadow:
-    0 10px 30px -8px color-mix(in srgb, var(--pb-c2) 60%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  margin-bottom: 0.95rem;
-}
-
-/* Outer glow ring */
-.pb-medallion__ring {
-  position: absolute;
-  inset: -5px;
-  border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--pb-c1) 55%, transparent);
-  opacity: 0.7;
-  animation: pb-pulse 3.4s ease-in-out infinite;
-}
-
-@keyframes pb-pulse {
-  0%, 100% { transform: scale(1);    opacity: 0.6; }
-  50%      { transform: scale(1.08); opacity: 0.2; }
-}
-
-.pb-medallion__icon {
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-.pb-medallion__icon svg {
-  width: 40px;
-  height: 40px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
-}
-
 .pb-eyebrow {
   font-family: var(--font-sans);
   font-size: 0.72rem;
@@ -76,12 +36,6 @@
 }
 
 @media (max-width: 540px) {
-  .pb-medallion { width: 72px; height: 72px; }
-  .pb-medallion__icon svg { width: 34px; height: 34px; }
   .pb-label { font-size: 1.7rem; }
   .pb-tagline { font-size: 0.9rem; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pb-medallion__ring { animation: none; }
 }

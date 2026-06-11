@@ -56,6 +56,7 @@ function LoadingBar() {
 import '../styles/Results.css'
 import { useQuiz } from '../context/QuizContext'
 import { schoolBadge } from '../data/schoolLogos'
+import PersonalityBadge from '../components/PersonalityBadge'
 
 const MAX_SCHOOLS = 12
 
@@ -360,6 +361,7 @@ export default function Results() {
   const [status, setStatus]         = useState('loading')
   const [schools, setSchools]       = useState([])
   const [dreamResults, setDreamResults] = useState([])
+  const [personalityType, setPersonalityType] = useState(null)
   const [errorMsg, setErrorMsg]     = useState('')
   const [expandedIndex, setExpandedIndex] = useState(null)
   const [expandedPool, setExpandedPool]   = useState('regular') // 'regular' | 'dream'
@@ -385,6 +387,7 @@ export default function Results() {
         if (!cancelled) {
           setDreamResults((data.dreamSchools || []).slice(0, 3))
           setSchools((data.schools || []).slice(0, MAX_SCHOOLS))
+          setPersonalityType(data.personalityType || null)
           setStatus('done')
         }
       } catch (err) {
@@ -450,6 +453,7 @@ export default function Results() {
 
             {status === 'done' && (
               <>
+                {personalityType && <PersonalityBadge type={personalityType} />}
                 <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
                 <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
                   {totalCount > 0
