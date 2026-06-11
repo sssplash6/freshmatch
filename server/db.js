@@ -33,12 +33,19 @@ const SCHEMA = `
   );
   CREATE INDEX IF NOT EXISTS submissions_created_at_idx ON submissions (created_at DESC);
   CREATE INDEX IF NOT EXISTS submissions_email_idx ON submissions (email);
+
+  -- Single-use access codes: one row per code the first time it is redeemed.
+  CREATE TABLE IF NOT EXISTS redeemed_codes (
+    code        TEXT PRIMARY KEY,
+    redeemed_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `
 
 const dbPath = process.env.DATABASE_PATH
 
 let db = null
 let insert = null
+let redeemStmt = null
 if (dbPath) {
   mkdirSync(dirname(dbPath), { recursive: true })
   db = new Database(dbPath)
@@ -50,10 +57,27 @@ if (dbPath) {
     VALUES
       (@name, @email, @country, @school_name, @grade, @sat, @gpa, @efc, @majors, @dream_schools, @personality_type, @result_count, @consent_data, @consent_offers, @input, @output)
   `)
+  redeemStmt = db.prepare('INSERT OR IGNORE INTO redeemed_codes (code) VALUES (?)')
   console.log(`[db] storing submissions at ${dbPath}`)
 }
 
 export const dbEnabled = () => db !== null
+
+// Atomically redeem a single-use access code. Returns:
+//   true  — first redemption (the code is now spent)
+//   false — already redeemed (reject)
+//   null  — no database configured, so single-use can't be enforced
+// better-sqlite3 is synchronous, so the INSERT OR IGNORE + changes check is a
+// single atomic step — no race between concurrent redemptions of the same code.
+export function redeemCode(code) {
+  if (!redeemStmt) return null
+  try {
+    return redeemStmt.run(code).changes === 1
+  } catch (err) {
+    console.error('[db] redeemCode failed:', err.message)
+    return null
+  }
+}
 
 // Persist one calculator run. `input` is the raw request body, `output` is the
 // payload returned to the client. better-sqlite3 is synchronous, so this returns

@@ -20,12 +20,15 @@ export default function Gate() {
         body: JSON.stringify({ token }),
       })
       if (res.ok) {
-        sessionStorage.setItem('fa-unlocked', '1')
+        localStorage.setItem('fa-unlocked', '1')
         dispatch({ type: 'UNLOCK' })
         return
       }
       const data = await res.json().catch(() => ({}))
-      setError(res.status === 401 ? "That access code isn't valid." : (data.error || `Error ${res.status}`))
+      const msg = res.status === 401 ? "That access code isn't valid."
+        : res.status === 409 ? 'This code has already been used.'
+        : (data.error || `Error ${res.status}`)
+      setError(msg)
       setStatus('error')
     } catch {
       setError('Could not reach the server — please try again.')

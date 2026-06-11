@@ -126,10 +126,12 @@ export function quizReducer(state, action) {
 
 const QuizContext = createContext(null)
 
-// Start at the access gate unless this session has already been unlocked.
+// Start at the access gate unless this device has already redeemed a code.
+// Codes are single-use, so we persist the unlock in localStorage — a redeemed
+// user can't re-enter their (now spent) code, so they must stay unlocked here.
 // RESTART returns to `landing` (initialState), so starting over never re-gates.
 function init() {
-  const unlocked = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('fa-unlocked') === '1'
+  const unlocked = typeof localStorage !== 'undefined' && localStorage.getItem('fa-unlocked') === '1'
   return unlocked ? initialState : { ...initialState, phase: 'gate' }
 }
 

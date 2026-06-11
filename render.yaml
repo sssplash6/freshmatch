@@ -24,8 +24,8 @@ services:
       # Token guarding GET /api/submissions. Endpoint is disabled when unset.
       - key: ADMIN_TOKEN
         sync: false
-      # Access codes for the front gate — comma-separated list, any one passes
-      # (e.g. code1,code2,code3). When unset the gate is disabled and everyone
-      # passes; set it to require a code before the calculator opens.
+      # Access codes for the front gate — comma-separated list of single-use
+      # codes (e.g. code1,code2,code3). Each works once, then is recorded on the
+      # disk DB and rejected. When unset the gate is disabled and everyone passes.
       - key: ACCESS_TOKEN
         sync: false
