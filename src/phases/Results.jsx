@@ -401,6 +401,18 @@ export default function Results() {
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Quiz progress lives in in-memory state, so a refresh would silently drop
+  // the student back to the landing page. Warn before unload — the browser
+  // shows its native "Reload site? / Leave site?" confirmation.
+  useEffect(() => {
+    function onBeforeUnload(e) {
+      e.preventDefault()
+      e.returnValue = '' // required for Chrome to show the prompt
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [])
+
   const handleExpand = useCallback((index) => {
     navDirRef.current = 0
     setExpandedIndex(index)
