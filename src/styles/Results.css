@@ -496,16 +496,6 @@
 .click-nudge__arrow {
   width: 52px;
   height: 44px;
-  animation: nudgeWiggle 2.2s ease-in-out infinite;
-}
-
-@keyframes nudgeWiggle {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(4px) rotate(3deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .click-nudge__arrow { animation: none; }
 }
 
 /* ── Scroll nudge ─────────────────────────────────────── */

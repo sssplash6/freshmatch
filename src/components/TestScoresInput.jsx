@@ -126,6 +126,15 @@ export default function TestScoresInput({
             ))}
           </div>
         )}
+
+        <label className="test-predicted">
+          <input
+            type="checkbox"
+            checked={!!testScores.predicted}
+            onChange={e => onUpdate('predicted', e.target.checked)}
+          />
+          <span>These are predicted grades (not yet final)</span>
+        </label>
       </div>
 
       <div className="slide-footer">

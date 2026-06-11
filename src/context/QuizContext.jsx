@@ -11,7 +11,7 @@ export const initialState = {
   grade: '',
   section1Answers: [],
   personalityAnswers: {},
-  testScores: { gpa: '', gpaScale: '4', ielts: '', sat: '', alevels: null, ib: null, ap: null },
+  testScores: { gpa: '', gpaScale: '4', ielts: '', sat: '', alevels: null, ib: null, ap: null, predicted: false },
   extracurriculars: Array(5).fill(null).map(() => ({ description: '' })),
   honors: [{ title: '', level: '' }],
   essay: '',

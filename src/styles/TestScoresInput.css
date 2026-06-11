@@ -157,6 +157,29 @@
   padding: 14px 0 4px;
 }
 
+.test-predicted {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 16px 0 4px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.test-predicted input {
+  accent-color: var(--orange);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.test-predicted:hover {
+  color: var(--ink);
+}
+
 /* Pill-chip "add optional test" buttons — clearly interactive */
 .test-add-btn {
   display: inline-flex;

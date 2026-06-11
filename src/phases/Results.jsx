@@ -456,11 +456,11 @@ export default function Results() {
                     ? `${totalCount} schools for ${name || 'you'}`
                     : 'No financial matches found'}
                 </div>
-                <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
-                  {totalCount > 0
-                    ? 'Tap any school to see your full fit analysis.'
-                    : 'No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.'}
-                </p>
+                {totalCount === 0 && (
+                  <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
+                    No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.
+                  </p>
+                )}
               </>
             )}
           </div>
