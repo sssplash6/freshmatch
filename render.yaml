@@ -24,3 +24,7 @@ services:
       # Token guarding GET /api/submissions. Endpoint is disabled when unset.
       - key: ADMIN_TOKEN
         sync: false
+      # Access code for the front gate. When unset the gate is disabled and
+      # everyone passes; set it to require a code before the calculator opens.
+      - key: ACCESS_TOKEN
+        sync: false

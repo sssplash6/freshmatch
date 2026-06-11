@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import narrateRouter from './routes/narrate.js';
 import submissionsRouter from './routes/submissions.js';
+import gateRouter from './routes/gate.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dir, '../dist');
@@ -11,6 +12,7 @@ const DIST = join(__dir, '../dist');
 const app = express();
 app.use(express.json());
 
+app.use('/api/gate', gateRouter);
 app.use('/api/narrate', narrateRouter);
 app.use('/api/submissions', submissionsRouter);
 

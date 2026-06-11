@@ -115,6 +115,8 @@ export function quizReducer(state, action) {
       return { ...state, efc: action.value }
     case 'SET_CONSENT':
       return { ...state, [action.field]: action.value }
+    case 'UNLOCK':
+      return { ...state, phase: 'landing', direction: 'forward' }
     case 'RESTART':
       return initialState
     default:
@@ -124,8 +126,15 @@ export function quizReducer(state, action) {
 
 const QuizContext = createContext(null)
 
+// Start at the access gate unless this session has already been unlocked.
+// RESTART returns to `landing` (initialState), so starting over never re-gates.
+function init() {
+  const unlocked = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('fa-unlocked') === '1'
+  return unlocked ? initialState : { ...initialState, phase: 'gate' }
+}
+
 export function QuizProvider({ children }) {
-  const [state, dispatch] = useReducer(quizReducer, initialState)
+  const [state, dispatch] = useReducer(quizReducer, undefined, init)
   return <QuizContext.Provider value={{ state, dispatch }}>{children}</QuizContext.Provider>
 }
 
