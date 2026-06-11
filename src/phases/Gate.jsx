@@ -51,6 +51,8 @@ export default function Gate() {
           placeholder="Access code"
           autoFocus
           autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
           spellCheck="false"
           aria-label="Access code"
         />
