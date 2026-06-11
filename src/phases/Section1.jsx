@@ -12,7 +12,7 @@ import MajorSearch from '../components/MajorSearch'
 
 export default function Section1() {
   const { state, dispatch } = useQuiz()
-  const { currentIndex, section1Answers, personalityAnswers, testScores, extracurriculars, honors, essay, majors, dreamSchools, efc, direction } = state
+  const { currentIndex, section1Answers, personalityAnswers, testScores, extracurriculars, honors, essay, majors, dreamSchools, efc, consentData, consentOffers, direction } = state
 
   const questions = buildSection1(essay)
   const totalQuestions = questions.length
@@ -97,6 +97,9 @@ export default function Section1() {
           key={question.id}
           efc={efc}
           onUpdate={value => dispatch({ type: 'SET_EFC', value })}
+          consentData={consentData}
+          consentOffers={consentOffers}
+          onConsent={(field, value) => dispatch({ type: 'SET_CONSENT', field, value })}
           {...sharedProps}
         />
       ) : question.type === 'personality' ? (

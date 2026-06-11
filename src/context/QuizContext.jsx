@@ -13,11 +13,13 @@ export const initialState = {
   personalityAnswers: {},
   testScores: { gpa: '', gpaScale: '4', ielts: '', sat: '', alevels: null, ib: null, ap: null },
   extracurriculars: Array(5).fill(null).map(() => ({ description: '' })),
-  honors: [{ title: '', level: '', participants: '' }],
+  honors: [{ title: '', level: '' }],
   essay: '',
   majors: [],
   dreamSchools: [],
   efc: null,
+  consentData: false,    // required — generate results
+  consentOffers: false,  // optional — curated offers
   direction: 'forward',
 }
 
@@ -88,7 +90,7 @@ export function quizReducer(state, action) {
     case 'REMOVE_EC':
       return { ...state, extracurriculars: state.extracurriculars.filter((_, i) => i !== action.index) }
     case 'ADD_HONOR':
-      return { ...state, honors: [...state.honors, { title: '', level: '', participants: '' }] }
+      return { ...state, honors: [...state.honors, { title: '', level: '' }] }
     case 'UPDATE_HONOR': {
       const honors = state.honors.map((h, i) =>
         i === action.index ? { ...h, [action.field]: action.value } : h
@@ -111,6 +113,8 @@ export function quizReducer(state, action) {
       return { ...state, dreamSchools: action.value }
     case 'SET_EFC':
       return { ...state, efc: action.value }
+    case 'SET_CONSENT':
+      return { ...state, [action.field]: action.value }
     case 'RESTART':
       return initialState
     default:

@@ -228,7 +228,7 @@ function ExpandedSchool({ school, index, total, isDream, onClose, onNav, navDirR
                       <div className="reason-sep" />
                     )}
                     {school.concerns?.map((c, j) => (
-                      <div key={j} className="reason-concern">○ {c}</div>
+                      <div key={j} className="reason-concern">? {c}</div>
                     ))}
                   </div>
                 )}
@@ -355,7 +355,7 @@ function DreamSchoolTile({ school, onExpand, index, invisible }) {
 
 export default function Results() {
   const { state, dispatch } = useQuiz()
-  const { name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc } = state
+  const { name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers } = state
 
   const [status, setStatus]         = useState('loading')
   const [schools, setSchools]       = useState([])
@@ -378,7 +378,7 @@ export default function Results() {
           // Send the complete quiz state so the full submission can be stored.
           // email/schoolName/section1Answers aren't used for matching, but are
           // captured for the saved record.
-          body: JSON.stringify({ name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc }),
+          body: JSON.stringify({ name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || `Server error ${res.status}`)
@@ -464,6 +464,16 @@ export default function Results() {
               </>
             )}
           </div>
+
+          {status === 'done' && totalCount > 0 && (
+            <div className="click-nudge" aria-hidden="true">
+              <span className="click-nudge__text">psst… tap a card!</span>
+              <svg className="click-nudge__arrow" viewBox="0 0 64 54" fill="none">
+                <path d="M5 7 C 15 36, 36 30, 50 45" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                <path d="M39 43 L51 47 L45 35" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          )}
 
           {/* ── Dream schools row ─── */}
           {status === 'done' && dreamResults.length > 0 && (

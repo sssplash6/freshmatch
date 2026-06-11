@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 
 import { quizReducer, initialState } from '../context/QuizContext'
+import { buildSection1 } from '../data/questions'
 
 const section1State = { ...initialState, phase: 'section1' }
+const lastSection1Index = buildSection1(initialState.essay).length - 1
 
 describe('quizReducer', () => {
   describe('START', () => {
@@ -36,7 +38,7 @@ describe('quizReducer', () => {
     })
 
     it('transitions to results after last section1 question', () => {
-      const s = { ...section1State, currentIndex: 4 }
+      const s = { ...section1State, currentIndex: lastSection1Index }
       const state = quizReducer(s, { type: 'NEXT' })
       expect(state.phase).toBe('results')
     })
@@ -50,10 +52,10 @@ describe('quizReducer', () => {
       expect(state.direction).toBe('back')
     })
 
-    it('does nothing on first question of section1', () => {
+    it('returns to intake from the first question of section1', () => {
       const state = quizReducer(section1State, { type: 'BACK' })
       expect(state.currentIndex).toBe(0)
-      expect(state.phase).toBe('section1')
+      expect(state.phase).toBe('intake')
     })
   })
 

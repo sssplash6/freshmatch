@@ -26,6 +26,8 @@ const SCHEMA = `
     dream_schools    TEXT,         -- JSON array of ids
     personality_type TEXT,
     result_count     INTEGER,
+    consent_data     INTEGER,       -- required consent (1/0)
+    consent_offers   INTEGER,       -- optional marketing consent (1/0)
     input            TEXT NOT NULL, -- full request body, JSON
     output           TEXT NOT NULL  -- full response payload, JSON
   );
@@ -44,9 +46,9 @@ if (dbPath) {
   db.exec(SCHEMA)
   insert = db.prepare(`
     INSERT INTO submissions
-      (name, email, country, school_name, grade, sat, gpa, efc, majors, dream_schools, personality_type, result_count, input, output)
+      (name, email, country, school_name, grade, sat, gpa, efc, majors, dream_schools, personality_type, result_count, consent_data, consent_offers, input, output)
     VALUES
-      (@name, @email, @country, @school_name, @grade, @sat, @gpa, @efc, @majors, @dream_schools, @personality_type, @result_count, @input, @output)
+      (@name, @email, @country, @school_name, @grade, @sat, @gpa, @efc, @majors, @dream_schools, @personality_type, @result_count, @consent_data, @consent_offers, @input, @output)
   `)
   console.log(`[db] storing submissions at ${dbPath}`)
 }
@@ -75,6 +77,8 @@ export function saveSubmission(input, output) {
       dream_schools: JSON.stringify(dreamIds),
       personality_type: output.personalityType || null,
       result_count: Array.isArray(output.schools) ? output.schools.length : 0,
+      consent_data: input.consentData ? 1 : 0,
+      consent_offers: input.consentOffers ? 1 : 0,
       input: JSON.stringify(input),
       output: JSON.stringify(output),
     })
@@ -84,7 +88,7 @@ export function saveSubmission(input, output) {
 }
 
 // Lightweight listing for the admin endpoint. Returns null when no DB is configured.
-const LIST_COLS = 'id, created_at, name, email, country, school_name, grade, sat, gpa, efc, majors, dream_schools, personality_type, result_count'
+const LIST_COLS = 'id, created_at, name, email, country, school_name, grade, sat, gpa, efc, majors, dream_schools, personality_type, result_count, consent_data, consent_offers'
 function safeParse(s) { try { return JSON.parse(s) } catch { return s } }
 
 export function listSubmissions(limit) {

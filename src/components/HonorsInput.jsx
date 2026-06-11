@@ -95,13 +95,6 @@ export default function HonorsInput({
               value={honor.level}
               onChange={v => onUpdate(i, 'level', v)}
             />
-            <input
-              className="list-input-field honor-participants-input"
-              type="text"
-              placeholder="# participants"
-              value={honor.participants}
-              onChange={e => onUpdate(i, 'participants', e.target.value)}
-            />
             <button className="list-remove-btn" onClick={() => onRemove(i)} aria-label="Remove">✕</button>
           </div>
         ))}

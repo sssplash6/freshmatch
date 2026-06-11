@@ -414,9 +414,10 @@
   letter-spacing: 0.1px;
 }
 
-.reason-match  { color: rgba(241, 141, 5, 0.90); }
+.reason-match  { color: #46c277; }
 .reason-concern { color: var(--faint); }
 
+[data-theme="light"] .reason-match { color: #1f9b54; }
 [data-theme="light"] .reason-concern { color: rgba(11, 29, 56, 0.45); }
 
 .reason-sep {
@@ -471,6 +472,40 @@
 .nav-arrow:disabled {
   opacity: 0.28;
   cursor: default;
+}
+
+/* ── Click-a-card nudge (handwritten) ─────────────────── */
+.click-nudge {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  margin: 10px 0 2px;
+  color: var(--orange);
+  pointer-events: none;
+  user-select: none;
+}
+
+.click-nudge__text {
+  font-family: 'Caveat', cursive;
+  font-size: 1.75rem;
+  line-height: 1;
+  transform: rotate(-4deg);
+}
+
+.click-nudge__arrow {
+  width: 52px;
+  height: 44px;
+  animation: nudgeWiggle 2.2s ease-in-out infinite;
+}
+
+@keyframes nudgeWiggle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(4px) rotate(3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .click-nudge__arrow { animation: none; }
 }
 
 /* ── Scroll nudge ─────────────────────────────────────── */

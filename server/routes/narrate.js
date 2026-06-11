@@ -242,7 +242,7 @@ function buildStudentSummary({ name, country, grade, testScores, extracurricular
 
   const honorsStr = (honors || [])
     .filter(h => h.title?.trim())
-    .map(h => `- ${h.title} (${h.level}${h.participants ? `, ~${h.participants} participants` : ''})`)
+    .map(h => `- ${h.title} (${h.level})`)
     .join('\n')
 
   return [
@@ -293,6 +293,11 @@ router.post('/', async (req, res) => {
 
     if (efc === null || efc === undefined) {
       return res.status(400).json({ error: 'EFC is required' })
+    }
+
+    // Data-processing consent is mandatory to run the calculation.
+    if (req.body.consentData !== true) {
+      return res.status(400).json({ error: 'Consent is required to generate results' })
     }
 
     cacheKey = JSON.stringify({ name, country, grade, testScores, extracurriculars, honors, essay, personality, majors, dreamSchools, efc })

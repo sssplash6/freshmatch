@@ -134,3 +134,62 @@
 .efc-slide__next:not(:disabled):active {
   transform: scale(0.98);
 }
+
+/* ── Consent ─────────────────────────────────────────── */
+.efc-consent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 22px 0 4px;
+}
+
+.efc-consent__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.efc-consent__box {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.efc-consent__box:checked {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.efc-consent__box:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.efc-consent__text {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.efc-consent__req {
+  color: var(--orange);
+  font-weight: 600;
+}

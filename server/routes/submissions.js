@@ -1,32 +1,46 @@
 // Read-only access to collected submissions, guarded by ADMIN_TOKEN.
 // The endpoint is disabled unless ADMIN_TOKEN is set, so it can never leak data
-// by default. Pass the token as ?token= or an `x-admin-token` header.
-//   GET /api/submissions?token=XXX&limit=100          → JSON rows
-//   GET /api/submissions?token=XXX&format=csv         → CSV download
+// by default. Authenticate with an `x-admin-token` header (preferred — keeps the
+// secret out of URLs/logs); a ?token= query param is also accepted for ad-hoc
+// browser downloads, at the cost of the token appearing in access logs/history.
+//   GET /api/submissions?limit=100   (x-admin-token: XXX)  → JSON rows
+//   GET /api/submissions?format=csv  (x-admin-token: XXX)  → CSV download
 import { Router } from 'express'
+import { timingSafeEqual } from 'crypto'
 import { dbEnabled, listSubmissions } from '../db.js'
 
 const router = Router()
 
-const COLS = ['id', 'created_at', 'name', 'email', 'country', 'school_name', 'grade', 'sat', 'gpa', 'efc', 'majors', 'dream_schools', 'personality_type', 'result_count']
+const COLS = ['id', 'created_at', 'name', 'email', 'country', 'school_name', 'grade', 'sat', 'gpa', 'efc', 'majors', 'dream_schools', 'personality_type', 'result_count', 'consent_data', 'consent_offers']
 
 function toCsv(rows) {
   const esc = v => {
     if (v == null) return ''
-    const s = Array.isArray(v) ? v.join('; ') : String(v)
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    let s = Array.isArray(v) ? v.join('; ') : String(v)
+    // Formula-injection guard: a leading =, +, -, @, tab, or CR makes spreadsheet
+    // apps evaluate the cell. Prefix with a single quote to neutralize it.
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const header = COLS.join(',')
   const lines = rows.map(r => COLS.map(c => esc(r[c])).join(','))
-  return [header, ...lines].join('\n')
+  return [header, ...lines].join('\r\n')
+}
+
+// Constant-time token check — avoids leaking the secret via response timing.
+function tokenMatches(provided, token) {
+  if (typeof provided !== 'string') return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(token)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 router.get('/', async (req, res) => {
   const token = process.env.ADMIN_TOKEN
   if (!token) return res.status(404).json({ error: 'Not found' })
 
-  const provided = req.query.token || req.get('x-admin-token')
-  if (provided !== token) return res.status(401).json({ error: 'Unauthorized' })
+  const provided = req.get('x-admin-token') ?? req.query.token
+  if (!tokenMatches(provided, token)) return res.status(401).json({ error: 'Unauthorized' })
 
   if (!dbEnabled()) return res.status(503).json({ error: 'No database configured' })
 
