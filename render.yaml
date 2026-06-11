@@ -2,7 +2,9 @@ services:
   - type: web
     name: calc-api
     runtime: node
-    buildCommand: npm install
+    # Build the frontend too — the same service serves dist/ so the app's
+    # relative /api calls resolve without CORS or a separate static host.
+    buildCommand: npm install && npm run build
     startCommand: npm start
     # Persistent disk for the SQLite submissions database. Survives deploys and
     # restarts. Note: a disk pins the service to a single instance and makes
@@ -22,12 +24,3 @@ services:
       # Token guarding GET /api/submissions. Endpoint is disabled when unset.
       - key: ADMIN_TOKEN
         sync: false
-
-  - type: static
-    name: calc-frontend
-    buildCommand: npm run build
-    staticPublishPath: ./dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
