@@ -5,6 +5,7 @@ import Landing from './phases/Landing'
 import Intake from './phases/Intake'
 import Section1 from './phases/Section1'
 import Results from './phases/Results'
+import Admin from './admin/Admin'
 
 function Quiz() {
   const { state } = useQuiz()
@@ -41,11 +42,20 @@ function ThemeToggle() {
 }
 
 export default function App() {
+  // The /admin scouting dashboard is a separate surface from the quiz. The SPA
+  // fallback serves index.html for /admin, so we branch on the path here.
+  const isAdmin = typeof window !== 'undefined'
+    && window.location.pathname.replace(/\/+$/, '') === '/admin'
+
   return (
     <div className="app">
-      <QuizProvider>
-        <Quiz />
-      </QuizProvider>
+      {isAdmin ? (
+        <Admin />
+      ) : (
+        <QuizProvider>
+          <Quiz />
+        </QuizProvider>
+      )}
       <ThemeToggle />
     </div>
   )
