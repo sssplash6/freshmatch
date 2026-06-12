@@ -120,3 +120,18 @@ export function listSubmissions(limit) {
   const rows = db.prepare(`SELECT ${LIST_COLS} FROM submissions ORDER BY created_at DESC LIMIT ?`).all(limit)
   return rows.map(r => ({ ...r, majors: safeParse(r.majors), dream_schools: safeParse(r.dream_schools) }))
 }
+
+// Full single submission, including the complete input (extracurriculars,
+// honors, essay, all answers) and output. Returns null when not found / no DB.
+export function getSubmission(id) {
+  if (!db) return null
+  const row = db.prepare('SELECT * FROM submissions WHERE id = ?').get(id)
+  if (!row) return null
+  return {
+    ...row,
+    majors: safeParse(row.majors),
+    dream_schools: safeParse(row.dream_schools),
+    input: safeParse(row.input),
+    output: safeParse(row.output),
+  }
+}

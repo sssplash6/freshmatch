@@ -7,7 +7,7 @@
 //   GET /api/submissions?format=csv  (x-admin-token: XXX)  → CSV download
 import { Router } from 'express'
 import { timingSafeEqual } from 'crypto'
-import { dbEnabled, listSubmissions } from '../db.js'
+import { dbEnabled, listSubmissions, getSubmission } from '../db.js'
 
 const router = Router()
 
@@ -35,7 +35,9 @@ function tokenMatches(provided, token) {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-router.get('/', async (req, res) => {
+// Shared guard for every admin route: hide existence when disabled (404),
+// reject bad tokens (401), and surface a missing database (503).
+router.use((req, res, next) => {
   const token = process.env.ADMIN_TOKEN
   if (!token) return res.status(404).json({ error: 'Not found' })
 
@@ -43,7 +45,24 @@ router.get('/', async (req, res) => {
   if (!tokenMatches(provided, token)) return res.status(401).json({ error: 'Unauthorized' })
 
   if (!dbEnabled()) return res.status(503).json({ error: 'No database configured' })
+  next()
+})
 
+// Full single submission (extracurriculars, honors, essay, all answers).
+router.get('/:id', (req, res) => {
+  const id = Number(req.params.id)
+  if (!Number.isInteger(id) || id < 1) return res.status(404).json({ error: 'Not found' })
+  try {
+    const sub = getSubmission(id)
+    if (!sub) return res.status(404).json({ error: 'Not found' })
+    res.json(sub)
+  } catch (err) {
+    console.error('[submissions] detail query failed:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.get('/', async (req, res) => {
   const limit = Math.min(Math.max(parseInt(req.query.limit) || 100, 1), 5000)
   try {
     // Lightweight columns for listing; full input/output stay in the table.

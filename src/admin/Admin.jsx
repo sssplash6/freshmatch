@@ -73,6 +73,115 @@ function Login({ onAuth }) {
 
 const EXPORT_COLS = ['created_at', 'name', 'email', 'country', 'grade', 'school_name', 'sat', 'gpa', 'majors', 'dream_schools', 'personality_type', 'consent_offers']
 
+// Render the name of a dream-school entry, which may be a string id or an object.
+const schoolName = s => (typeof s === 'string' ? s : (s?.name || s?.id || ''))
+
+function DetailModal({ id, token, onClose }) {
+  const [sub, setSub]       = useState(null)
+  const [status, setStatus] = useState('loading')
+  const [error, setError]   = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/submissions/${id}`, { headers: { 'x-admin-token': token } })
+      .then(async res => {
+        if (!res.ok) throw new Error(`Error ${res.status}`)
+        return res.json()
+      })
+      .then(data => { if (!cancelled) { setSub(data); setStatus('done') } })
+      .catch(err => { if (!cancelled) { setError(err.message); setStatus('error') } })
+    return () => { cancelled = true }
+  }, [id, token])
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const input = sub?.input || {}
+  const ts = input.testScores || {}
+  const honors = (input.honors || []).filter(h => (h?.title || '').trim())
+  const ecs = (input.extracurriculars || []).filter(e => (e?.description || '').trim())
+  const scoreRows = [
+    ['SAT', ts.sat], ['GPA', ts.gpa && `${ts.gpa}${ts.gpaScale ? ` / ${ts.gpaScale}` : ''}`],
+    ['IELTS', ts.ielts], ['A Levels', ts.alevels], ['IB', ts.ib], ['AP', ts.ap],
+  ].filter(([, v]) => v != null && String(v).trim())
+
+  return (
+    <div className="adm-modal-backdrop" onClick={onClose}>
+      <div className="adm-modal" onClick={e => e.stopPropagation()}>
+        <button className="adm-modal-close" onClick={onClose} aria-label="Close">✕</button>
+
+        {status === 'loading' && <div className="adm-modal-state">Loading…</div>}
+        {status === 'error' && <div className="adm-modal-state adm-error">{error}</div>}
+
+        {status === 'done' && (
+          <>
+            <div className="adm-brand">{input.country || sub.country || ''}</div>
+            <h2 className="adm-modal-name">{input.name || sub.name || 'Applicant'}</h2>
+            <div className="adm-modal-meta">
+              {input.email && <a href={`mailto:${input.email}`}>{input.email}</a>}
+              {input.grade && <span>Grade {input.grade}</span>}
+              {(input.schoolName || sub.school_name) && <span>{input.schoolName || sub.school_name}</span>}
+              {sub.personality_type && <span>{sub.personality_type}</span>}
+              {ts.predicted && <span className="adm-tag">Predicted grades</span>}
+            </div>
+
+            {scoreRows.length > 0 && (
+              <section className="adm-sec">
+                <h3>Scores</h3>
+                <div className="adm-scores">
+                  {scoreRows.map(([k, v]) => (
+                    <div key={k} className="adm-score"><span>{k}</span><strong>{v}</strong></div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {(input.majors?.length > 0 || input.dreamSchools?.length > 0) && (
+              <section className="adm-sec">
+                <h3>Interests</h3>
+                {input.majors?.length > 0 && <p><b>Majors:</b> {input.majors.join(', ')}</p>}
+                {input.dreamSchools?.length > 0 && (
+                  <p><b>Dream schools:</b> {input.dreamSchools.map(schoolName).filter(Boolean).join(', ')}</p>
+                )}
+              </section>
+            )}
+
+            <section className="adm-sec">
+              <h3>Honors {honors.length > 0 && <span className="adm-n">{honors.length}</span>}</h3>
+              {honors.length > 0 ? (
+                <ul className="adm-list">
+                  {honors.map((h, i) => (
+                    <li key={i}>{h.title}{h.level ? <span className="adm-muted"> — {h.level}</span> : null}</li>
+                  ))}
+                </ul>
+              ) : <p className="adm-muted">None listed.</p>}
+            </section>
+
+            <section className="adm-sec">
+              <h3>Extracurriculars {ecs.length > 0 && <span className="adm-n">{ecs.length}</span>}</h3>
+              {ecs.length > 0 ? (
+                <ul className="adm-list">
+                  {ecs.map((e, i) => <li key={i}>{e.description}</li>)}
+                </ul>
+              ) : <p className="adm-muted">None listed.</p>}
+            </section>
+
+            <section className="adm-sec">
+              <h3>Essay</h3>
+              {input.essay?.trim()
+                ? <p className="adm-essay">{input.essay}</p>
+                : <p className="adm-muted">No essay (student skipped it).</p>}
+            </section>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function Admin() {
   const [token, setToken]   = useState(() => sessionStorage.getItem(TOKEN_KEY) || '')
   const [rows, setRows]     = useState([])
@@ -86,6 +195,7 @@ export default function Admin() {
   const [minSat, setMinSat]   = useState('')
   const [sort, setSort]       = useState('newest')
   const [selected, setSelected] = useState(() => new Set())
+  const [detailId, setDetailId] = useState(null)
 
   const load = useCallback(async (tok) => {
     setStatus('loading'); setError('')
@@ -236,18 +346,18 @@ export default function Admin() {
           </thead>
           <tbody>
             {filtered.map(r => (
-              <tr key={r.id} className={selected.has(r.id) ? 'adm-row--on' : ''}>
-                <td className="adm-check"><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} aria-label={`Select ${r.name || r.id}`} /></td>
+              <tr key={r.id} className={`adm-clickable${selected.has(r.id) ? ' adm-row--on' : ''}`} onClick={() => setDetailId(r.id)}>
+                <td className="adm-check" onClick={e => e.stopPropagation()}><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} aria-label={`Select ${r.name || r.id}`} /></td>
                 <td className="adm-nowrap">{String(r.created_at || '').slice(0, 10)}</td>
                 <td>{r.name || '—'}</td>
-                <td>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td>
+                <td onClick={e => e.stopPropagation()}>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td>
                 <td>{r.country || '—'}</td>
                 <td>{r.grade || '—'}</td>
                 <td>{r.school_name || '—'}</td>
                 <td>{r.sat || '—'}</td>
                 <td>{r.gpa || '—'}</td>
                 <td className="adm-wrap">{(r.majors || []).join(', ') || '—'}</td>
-                <td className="adm-wrap">{(r.dream_schools || []).join(', ') || '—'}</td>
+                <td className="adm-wrap">{(r.dream_schools || []).map(schoolName).filter(Boolean).join(', ') || '—'}</td>
                 <td>{r.personality_type || '—'}</td>
               </tr>
             ))}
@@ -257,6 +367,8 @@ export default function Admin() {
           </tbody>
         </table>
       </div>
+
+      {detailId != null && <DetailModal id={detailId} token={token} onClose={() => setDetailId(null)} />}
     </div>
   )
 }
