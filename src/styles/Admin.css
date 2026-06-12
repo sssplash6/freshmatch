@@ -301,6 +301,27 @@
 .adm-score span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); }
 .adm-score strong { font-size: 1.05rem; color: var(--ink); }
 
+.adm-fits { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
+.adm-fit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 0.84rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+.adm-fit em { font-style: normal; font-weight: 400; color: var(--faint); font-size: 0.78rem; }
+.adm-fit--dream { border-color: rgba(241, 141, 5, 0.5); background: rgba(241, 141, 5, 0.08); }
+
+.adm-pq { margin: 0; padding-left: 1.1rem; }
+.adm-pq li { margin-bottom: 10px; }
+.adm-pq-q { display: block; font-size: 0.82rem; color: var(--faint); line-height: 1.4; }
+.adm-pq-a { display: block; font-size: 0.9rem; color: var(--ink); line-height: 1.45; margin-top: 2px; }
+.adm-pq-note { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
 .adm-list { margin: 0; padding-left: 1.1rem; }
 .adm-list li { font-size: 0.9rem; color: var(--ink); line-height: 1.5; margin-bottom: 5px; }
 .adm-essay {

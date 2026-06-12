@@ -1,7 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import '../styles/Admin.css'
+import { personality as PERSONALITY_Q } from '../data/questions'
 
 const TOKEN_KEY = 'fa-admin-token'
+
+// Map a personality question id → { text, options: { letter: optionText } } so
+// stored answers ({ pq1: 'A' }) can be rendered readably.
+const PQ_BY_ID = Object.fromEntries(PERSONALITY_Q.map(q => [
+  q.id,
+  { text: q.text, options: Object.fromEntries(q.options.map(o => [o.letter, o.text])) },
+]))
 
 // Parse a SAT-style numeric score out of a free-text field ("1500", "N/A", "").
 function num(v) {
@@ -100,9 +108,14 @@ function DetailModal({ id, token, onClose }) {
   }, [onClose])
 
   const input = sub?.input || {}
+  const output = sub?.output || {}
   const ts = input.testScores || {}
   const honors = (input.honors || []).filter(h => (h?.title || '').trim())
   const ecs = (input.extracurriculars || []).filter(e => (e?.description || '').trim())
+  const matches = (output.schools || []).filter(s => s?.name)
+  const dreamFits = (output.dreamSchools || []).filter(s => s?.name)
+  // Personality answers are captured only when the essay is skipped.
+  const pqAnswers = Object.entries(input.personality || {}).filter(([id]) => PQ_BY_ID[id])
   const scoreRows = [
     ['SAT', ts.sat], ['GPA', ts.gpa && `${ts.gpa}${ts.gpaScale ? ` / ${ts.gpaScale}` : ''}`],
     ['IELTS', ts.ielts], ['A Levels', ts.alevels], ['IB', ts.ib], ['AP', ts.ap],
@@ -149,6 +162,28 @@ function DetailModal({ id, token, onClose }) {
               </section>
             )}
 
+            {(matches.length > 0 || dreamFits.length > 0) && (
+              <section className="adm-sec">
+                <h3>Fit results</h3>
+                {dreamFits.length > 0 && (
+                  <div className="adm-fits">
+                    {dreamFits.map(s => (
+                      <span key={`d-${s.id}`} className="adm-fit adm-fit--dream" title="Dream school">
+                        {s.name} — {s.fitScore ?? s.chance ?? '—'}{s.chance != null ? <em> · {s.chance}% chance</em> : null}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {matches.length > 0 && (
+                  <div className="adm-fits">
+                    {matches.map(s => (
+                      <span key={`m-${s.id}`} className="adm-fit">{s.name} — {s.fitScore ?? '—'}</span>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
             <section className="adm-sec">
               <h3>Honors {honors.length > 0 && <span className="adm-n">{honors.length}</span>}</h3>
               {honors.length > 0 ? (
@@ -175,6 +210,20 @@ function DetailModal({ id, token, onClose }) {
                 ? <p className="adm-essay">{input.essay}</p>
                 : <p className="adm-muted">No essay (student skipped it).</p>}
             </section>
+
+            {pqAnswers.length > 0 && (
+              <section className="adm-sec">
+                <h3>Personality quiz <span className="adm-muted adm-pq-note">(answered in place of the essay)</span></h3>
+                <ol className="adm-pq">
+                  {pqAnswers.map(([id, letter]) => (
+                    <li key={id}>
+                      <span className="adm-pq-q">{PQ_BY_ID[id].text}</span>
+                      <span className="adm-pq-a">{PQ_BY_ID[id].options[letter] || letter}</span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
           </>
         )}
       </div>
