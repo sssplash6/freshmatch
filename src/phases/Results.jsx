@@ -442,6 +442,7 @@ export default function Results() {
   return (
     <>
       <div className="results-page">
+        <img className="results-brand" src={`${import.meta.env.BASE_URL}brand-shield.png`} alt="Freshman Academy" />
         {/* ── Above-fold: fills at least full viewport so CTA always requires scrolling ── */}
         <div className="results-above-fold">
           <div className="results-header">
