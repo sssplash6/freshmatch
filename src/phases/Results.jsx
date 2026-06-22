@@ -373,6 +373,14 @@ export default function Results() {
   useEffect(() => {
     let cancelled = false
     async function fetchResults() {
+      if (window.location.search.includes('sample')) {
+        const n = (id, name, fitScore, chance) => ({ id, name, fitScore, chance, narrative: `${name} is a strong match for this profile — the academics, intended major, and activities line up well with what the school looks for.`, matchReasons: [], concerns: [] })
+        setDreamResults([n('cornell','Cornell University',82,70), n('nyuad','NYU Abu Dhabi',91,64), n('stanford','Stanford University',79,64)])
+        setSchools([n('gu-q','Georgetown University Qatar',95), n('princeton','Princeton University',90), n('upenn','University of Pennsylvania',89), n('williams','Williams College',87), n('amherst','Amherst College',85), n('claremont-mckenna','Claremont McKenna College',84), n('tufts','Tufts University',82), n('middlebury','Middlebury College',78), n('hamilton','Hamilton College',76), n('colby','Colby College',74), n('macalester','Macalester College',72)])
+        setPersonalityType('business')
+        setStatus('done')
+        return
+      }
       try {
         const res = await fetch('/api/narrate', {
           method: 'POST',

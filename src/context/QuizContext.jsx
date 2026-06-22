@@ -115,8 +115,6 @@ export function quizReducer(state, action) {
       return { ...state, efc: action.value }
     case 'SET_CONSENT':
       return { ...state, [action.field]: action.value }
-    case 'UNLOCK':
-      return { ...state, phase: 'landing', direction: 'forward' }
     case 'RESTART':
       return initialState
     default:
@@ -126,13 +124,13 @@ export function quizReducer(state, action) {
 
 const QuizContext = createContext(null)
 
-// Start at the access gate unless this device has already redeemed a code.
-// Codes are single-use, so we persist the unlock in localStorage — a redeemed
-// user can't re-enter their (now spent) code, so they must stay unlocked here.
-// RESTART returns to `landing` (initialState), so starting over never re-gates.
+// Everyone starts on the landing page. `?sample` jumps straight to a demo
+// results screen for previewing.
 function init() {
-  const unlocked = typeof localStorage !== 'undefined' && localStorage.getItem('fa-unlocked') === '1'
-  return unlocked ? initialState : { ...initialState, phase: 'gate' }
+  if (typeof window !== 'undefined' && window.location.search.includes('sample')) {
+    return { ...initialState, phase: 'results', name: 'Amir' }
+  }
+  return initialState
 }
 
 export function QuizProvider({ children }) {

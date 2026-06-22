@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { QuizProvider, useQuiz } from './context/QuizContext'
-import Gate from './phases/Gate'
 import Landing from './phases/Landing'
 import Intake from './phases/Intake'
 import Section1 from './phases/Section1'
@@ -10,7 +9,6 @@ import Admin from './admin/Admin'
 function Quiz() {
   const { state } = useQuiz()
   switch (state.phase) {
-    case 'gate':    return <Gate />
     case 'landing': return <Landing />
     case 'intake':  return <Intake />
     case 'results': return <Results />
@@ -36,7 +34,7 @@ function ThemeToggle() {
       onClick={() => setTheme(next)}
       aria-label={`Switch to ${next} theme`}
     >
-      {theme === 'dark' ? '☀ Light' : '◑ Dark'}
+      {theme === 'dark' ? '○ Light' : '◑ Dark'}
     </button>
   )
 }

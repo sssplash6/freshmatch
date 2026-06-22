@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import '../styles/PersonalityBadge.css'
 
@@ -52,7 +53,12 @@ export const PERSONALITY_TYPES = {
 
 export default function PersonalityBadge({ type }) {
   const data = PERSONALITY_TYPES[type]
+  const [imgErr, setImgErr] = useState(false)
   if (!data) return null
+
+  // Per-type emblem lives at public/personality/<type>.png. Until that file
+  // exists the image errors out and we hide it, leaving the text-only badge.
+  const logo = `${import.meta.env.BASE_URL}personality/${type}.png`
 
   return (
     <motion.div
@@ -61,6 +67,14 @@ export default function PersonalityBadge({ type }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.1 }}
     >
+      {!imgErr && (
+        <div
+          className="pb-emblem"
+          style={{ '--pb-grad-a': data.grad[0], '--pb-grad-b': data.grad[1] }}
+        >
+          <img src={logo} alt={data.label} onError={() => setImgErr(true)} />
+        </div>
+      )}
       <div className="pb-eyebrow">Your Freshman type</div>
       <div className="pb-label">{data.label}</div>
       <p className="pb-tagline">{data.tagline}</p>
