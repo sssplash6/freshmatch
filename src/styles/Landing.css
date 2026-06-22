@@ -52,11 +52,9 @@
   top: 30px;
   left: 36px;
   z-index: 4;
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: var(--cream);
+  height: 30px;
+  width: auto;
+  display: block;
 }
 
 /* ---- Floating field ---- */
@@ -266,7 +264,7 @@
 }
 
 @media (max-width: 640px) {
-  .fs-brand { top: 22px; left: 22px; font-size: 15px; }
+  .fs-brand { top: 22px; left: 22px; height: 26px; }
   .fs-card { width: 60px; height: 60px; }
   .fs-chip { width: 60px; height: 60px; padding: 12px; border-radius: 16px; }
   .fs-sub { font-size: 15px; }
@@ -290,10 +288,6 @@
 
 [data-theme="light"] .landing::after {
   background: radial-gradient(120% 90% at 50% 45%, rgba(232, 228, 222, 0) 55%, rgba(190, 182, 170, 0.28) 100%);
-}
-
-[data-theme="light"] .fs-brand {
-  color: var(--ink);
 }
 
 [data-theme="light"] .fs-eyebrow {

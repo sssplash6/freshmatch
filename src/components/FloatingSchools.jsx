@@ -174,7 +174,7 @@ export default function FloatingSchools({
 
   return (
     <section className="landing" onMouseMove={reduce ? undefined : handleMouseMove}>
-      <div className="fs-brand">{brand}</div>
+      <img className="fs-brand" src={`${import.meta.env.BASE_URL}fa-logo.svg`} alt={brand} />
 
       <div className="fs-field" aria-hidden="true">
         {visible.map((school, i) => (
