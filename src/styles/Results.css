@@ -18,7 +18,7 @@
 /* Brand shield in the middle-right of the results header, beside the title. */
 .results-brand {
   position: absolute;
-  top: 150px;
+  bottom: 0;
   right: 16px;
   width: 116px;
   height: auto;
@@ -29,10 +29,10 @@
 [data-theme="light"] .results-brand { filter: brightness(0); opacity: 0.88; }
 
 @media (max-width: 820px) {
-  .results-brand { width: 76px; top: 120px; right: 4px; }
+  .results-brand { width: 76px; right: 4px; }
 }
 @media (max-width: 520px) {
-  .results-brand { width: 56px; top: 96px; }
+  .results-brand { width: 56px; }
 }
 
 .res-rise {
@@ -41,6 +41,7 @@
 
 /* ── Header ──────────────────────────────────────────── */
 .results-header {
+  position: relative;
   margin-bottom: 32px;
 }
 
@@ -512,11 +513,6 @@
   font-size: 1.75rem;
   line-height: 1;
   transform: rotate(-4deg);
-}
-
-.click-nudge__arrow {
-  width: 52px;
-  height: 44px;
 }
 
 /* ── Scroll nudge ─────────────────────────────────────── */

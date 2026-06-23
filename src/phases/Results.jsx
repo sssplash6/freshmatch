@@ -450,10 +450,12 @@ export default function Results() {
   return (
     <>
       <div className="results-page">
-        <img className="results-brand" src={`${import.meta.env.BASE_URL}brand-shield.png`} alt="Freshman Academy" />
         {/* ── Above-fold: fills at least full viewport so CTA always requires scrolling ── */}
         <div className="results-above-fold">
           <div className="results-header">
+            {status === 'done' && (
+              <img className="results-brand" src={`${import.meta.env.BASE_URL}brand-shield.png`} alt="Freshman Academy" />
+            )}
             <div className="results-complete res-rise" style={{ animationDelay: '0ms' }}>
               <span className="results-check">✓</span> Assessment complete
             </div>
@@ -493,10 +495,6 @@ export default function Results() {
           {status === 'done' && totalCount > 0 && (
             <div className="click-nudge" aria-hidden="true">
               <span className="click-nudge__text">psst… tap a card!</span>
-              <svg className="click-nudge__arrow" viewBox="0 0 64 54" fill="none">
-                <path d="M5 7 C 15 36, 36 30, 50 45" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-                <path d="M39 43 L51 47 L45 35" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
             </div>
           )}
 
