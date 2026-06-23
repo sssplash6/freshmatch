@@ -10,10 +10,7 @@
 .pb-emblem {
   width: 84px;
   height: 84px;
-  border-radius: 50%;
   margin-bottom: 0.9rem;
-  padding: 3px;
-  background: linear-gradient(135deg, var(--pb-grad-a), var(--pb-grad-b));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,9 +19,7 @@
 .pb-emblem img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--card);
+  object-fit: contain;
   display: block;
 }
 
