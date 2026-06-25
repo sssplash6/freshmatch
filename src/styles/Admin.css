@@ -269,6 +269,22 @@
   font-size: 0.78rem;
 }
 
+/* Consent badges — green = consented, muted red = declined. */
+.adm-consents { display: flex; flex-wrap: wrap; gap: 5px; }
+.adm-consents--modal { margin-top: 12px; }
+.adm-consent {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 5px;
+  padding: 1px 7px;
+  font-weight: 600;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+.adm-consent--on  { background: rgba(46, 160, 67, 0.15); color: #2ea043; }
+.adm-consent--off { background: rgba(224, 83, 61, 0.13); color: #e0533d; }
+
 .adm-sec { border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 16px; }
 .adm-sec h3 {
   font-size: 0.74rem;

@@ -46,7 +46,7 @@ export default function EfcSlide({ efc, onUpdate, consentData, consentOffers, on
             onChange={e => onConsent('consentData', e.target.checked)}
           />
           <span className="efc-consent__text">
-            I consent to my information being processed to generate my college matches.
+            I consent to Freshman Academy collecting and storing my data for usage in FreshMatch's college fit calculation.
             <span className="efc-consent__req"> Required</span>
           </span>
         </label>
@@ -59,7 +59,7 @@ export default function EfcSlide({ efc, onUpdate, consentData, consentOffers, on
             onChange={e => onConsent('consentOffers', e.target.checked)}
           />
           <span className="efc-consent__text">
-            I'd like to receive curated college and scholarship offers based on my results.
+            Freshman Academy is always eager to work with promising high school students, especially across the post-Soviet space, on a paid or scholarship basis. Consent to the following point to receive curated offers for Freshman programs, such as Full Support, Scholars, etc.
           </span>
         </label>
       </div>

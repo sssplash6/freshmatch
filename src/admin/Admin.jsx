@@ -79,10 +79,19 @@ function Login({ onAuth }) {
   )
 }
 
-const EXPORT_COLS = ['created_at', 'name', 'email', 'country', 'grade', 'school_name', 'sat', 'gpa', 'majors', 'dream_schools', 'personality_type', 'consent_offers']
+const EXPORT_COLS = ['created_at', 'name', 'email', 'country', 'grade', 'school_name', 'sat', 'gpa', 'majors', 'dream_schools', 'personality_type', 'consent_data', 'consent_offers']
 
 // Render the name of a dream-school entry, which may be a string id or an object.
 const schoolName = s => (typeof s === 'string' ? s : (s?.name || s?.id || ''))
+
+// A consent flag is stored as 1/0; render a small yes/no badge.
+function ConsentBadge({ on, label }) {
+  return (
+    <span className={`adm-consent${on ? ' adm-consent--on' : ' adm-consent--off'}`} title={`${label}: ${on ? 'consented' : 'not given'}`}>
+      {on ? '✓' : '✕'} {label}
+    </span>
+  )
+}
 
 function DetailModal({ id, token, onClose }) {
   const [sub, setSub]       = useState(null)
@@ -139,6 +148,11 @@ function DetailModal({ id, token, onClose }) {
               {(input.schoolName || sub.school_name) && <span>{input.schoolName || sub.school_name}</span>}
               {sub.personality_type && <span>{sub.personality_type}</span>}
               {ts.predicted && <span className="adm-tag">Predicted grades</span>}
+            </div>
+
+            <div className="adm-consents adm-consents--modal">
+              <ConsentBadge on={!!sub.consent_data} label="Data &amp; storage" />
+              <ConsentBadge on={!!sub.consent_offers} label="Curated offers" />
             </div>
 
             {scoreRows.length > 0 && (
@@ -390,7 +404,7 @@ export default function Admin() {
             <tr>
               <th className="adm-check"><input type="checkbox" checked={allShownSelected} onChange={toggleAll} aria-label="Select all" /></th>
               <th>Date</th><th>Name</th><th>Email</th><th>Country</th><th>Grade</th>
-              <th>School</th><th>SAT</th><th>GPA</th><th>Majors</th><th>Dream schools</th><th>Type</th>
+              <th>School</th><th>SAT</th><th>GPA</th><th>Majors</th><th>Dream schools</th><th>Type</th><th>Consent</th>
             </tr>
           </thead>
           <tbody>
@@ -408,10 +422,16 @@ export default function Admin() {
                 <td className="adm-wrap">{(r.majors || []).join(', ') || '—'}</td>
                 <td className="adm-wrap">{(r.dream_schools || []).map(schoolName).filter(Boolean).join(', ') || '—'}</td>
                 <td>{r.personality_type || '—'}</td>
+                <td className="adm-nowrap">
+                  <div className="adm-consents">
+                    <ConsentBadge on={!!r.consent_data} label="Data" />
+                    <ConsentBadge on={!!r.consent_offers} label="Offers" />
+                  </div>
+                </td>
               </tr>
             ))}
             {status === 'done' && filtered.length === 0 && (
-              <tr><td colSpan="12" className="adm-empty">No applicants match these filters.</td></tr>
+              <tr><td colSpan="13" className="adm-empty">No applicants match these filters.</td></tr>
             )}
           </tbody>
         </table>
