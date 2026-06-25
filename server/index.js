@@ -20,8 +20,14 @@ app.use(express.json());
 // ceiling that could lock out everyone late in the day.
 const narrateLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 5 });
 
+// Per-IP cap on the admin endpoint. The ADMIN_TOKEN is the only barrier to the
+// stored PII, so throttle to make online brute-forcing of the token infeasible
+// while leaving plenty of headroom for a real admin (refreshing, opening detail
+// modals, exporting). 60 requests / 5 min per IP is far below any brute-force rate.
+const adminLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 60 });
+
 app.use('/api/narrate', narrateLimiter, narrateRouter);
-app.use('/api/submissions', submissionsRouter);
+app.use('/api/submissions', adminLimiter, submissionsRouter);
 
 // Serve the built frontend from the same service so relative /api calls resolve.
 app.use(express.static(DIST));

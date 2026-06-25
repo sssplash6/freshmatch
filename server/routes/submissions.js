@@ -1,8 +1,8 @@
 // Read-only access to collected submissions, guarded by ADMIN_TOKEN.
 // The endpoint is disabled unless ADMIN_TOKEN is set, so it can never leak data
-// by default. Authenticate with an `x-admin-token` header (preferred — keeps the
-// secret out of URLs/logs); a ?token= query param is also accepted for ad-hoc
-// browser downloads, at the cost of the token appearing in access logs/history.
+// by default. Authenticate with the `x-admin-token` header only — keeping the
+// secret in a header (not the URL) keeps it out of access logs and browser
+// history. CSV download is done through the Admin UI's Export button.
 //   GET /api/submissions?limit=100   (x-admin-token: XXX)  → JSON rows
 //   GET /api/submissions?format=csv  (x-admin-token: XXX)  → CSV download
 import { Router } from 'express'
@@ -41,7 +41,7 @@ router.use((req, res, next) => {
   const token = process.env.ADMIN_TOKEN
   if (!token) return res.status(404).json({ error: 'Not found' })
 
-  const provided = req.get('x-admin-token') ?? req.query.token
+  const provided = req.get('x-admin-token')
   if (!tokenMatches(provided, token)) return res.status(401).json({ error: 'Unauthorized' })
 
   if (!dbEnabled()) return res.status(503).json({ error: 'No database configured' })
@@ -58,7 +58,7 @@ router.get('/:id', (req, res) => {
     res.json(sub)
   } catch (err) {
     console.error('[submissions] detail query failed:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 
@@ -75,7 +75,7 @@ router.get('/', async (req, res) => {
     res.json({ count: rows.length, submissions: rows })
   } catch (err) {
     console.error('[submissions] query failed:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 

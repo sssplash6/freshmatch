@@ -604,8 +604,10 @@ No markdown, no extra keys. Output "personalityType" first, then generate "dream
   } catch (err) {
     settleInflight?.reject(err)
     if (cacheKey) inflight.delete(cacheKey)
+    // Log the real cause server-side; return a generic message so upstream
+    // details (e.g. raw OpenRouter error bodies) never reach the client.
     console.error('/api/narrate error:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: 'Could not generate your results right now. Please try again.' })
   }
 })
 
