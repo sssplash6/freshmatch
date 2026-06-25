@@ -33,7 +33,7 @@ export default function Landing() {
 
   return (
     <FloatingSchools
-      brand="Freshman Academy"
+      brand="FreshMatch"
       eyebrow="Admissions Fit Calculator"
       title="Find out where you"
       titleAccent="actually fit."
