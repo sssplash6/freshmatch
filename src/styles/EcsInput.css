@@ -6,6 +6,11 @@
   color: var(--muted);
 }
 
+/* Validation feedback shown when an entry is junk / too short. */
+.question-hint--warn {
+  color: #e0533d;
+}
+
 .list-input-list {
   padding: 20px 32px 0;
   display: flex;

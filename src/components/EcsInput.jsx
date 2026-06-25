@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { isSubstantiveEc, MIN_EC_CHARS } from '../utils/validation'
 import '../styles/EcsInput.css'
 
 const MAX = 8
@@ -24,9 +25,12 @@ export default function EcsInput({
   const lastRef = useRef(null)
   const prevLengthRef = useRef(extracurriculars.length)
 
-  // At least 5 activities must be filled in before continuing.
-  const filledCount = extracurriculars.filter(e => e.description.trim()).length
+  // At least 5 *substantive* activities must be filled in before continuing —
+  // single letters or repeated characters don't count.
+  const filledCount = extracurriculars.filter(e => isSubstantiveEc(e.description)).length
   const canContinue = filledCount >= MIN
+  // Flag rows that have text but aren't substantive, so the user knows why they're stuck.
+  const hasJunk = extracurriculars.some(e => e.description.trim() && !isSubstantiveEc(e.description))
 
   useEffect(() => {
     if (extracurriculars.length > prevLengthRef.current && lastRef.current) {
@@ -46,6 +50,11 @@ export default function EcsInput({
       <div className="question-hint">
         5 required, up to 8 total. For each, qualify and quantify its scale and impact, and what inspired you to pursue it.
       </div>
+      {hasJunk && (
+        <div className="question-hint question-hint--warn">
+          Please describe each activity properly (at least {MIN_EC_CHARS} characters) — single letters don't count.
+        </div>
+      )}
 
       <div className="list-input-list">
         {extracurriculars.map((ec, i) => (

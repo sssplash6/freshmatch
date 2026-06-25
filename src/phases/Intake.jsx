@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { useQuiz } from '../context/QuizContext'
 import CountrySearch from '../components/CountrySearch'
+import { isValidSchoolName } from '../utils/validation'
 import '../styles/IntakeSlide.css'
 
 const GRADES = ['9th Grade', '10th Grade', '11th Grade', '12th Grade', 'Gap Year']
@@ -18,7 +19,7 @@ export default function Intake() {
   }, [step])
 
   const canContinueStep0 = name.trim().length > 0 && email.trim().length > 0 && email.includes('@')
-  const canContinueStep1 = country.trim().length > 0 && schoolName.trim().length > 0 && grade !== ''
+  const canContinueStep1 = country.trim().length > 0 && isValidSchoolName(schoolName) && grade !== ''
 
   function handleKeyDown0(e) {
     if (e.key === 'Enter' && canContinueStep0) setStep(1)

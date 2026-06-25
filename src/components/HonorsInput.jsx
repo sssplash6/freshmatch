@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isValidHonorTitle, MIN_HONOR_CHARS } from '../utils/validation'
 import '../styles/HonorsInput.css'
 
 const MAX = 5
@@ -71,6 +72,12 @@ export default function HonorsInput({
     prevLengthRef.current = honors.length
   }, [honors.length])
 
+  // Honors are optional, but any row with a typed title must be a real title
+  // with a level selected — blocks "Jjj"-style junk from being submitted.
+  const startedRows = honors.filter(h => h.title?.trim())
+  const hasJunk = startedRows.some(h => !isValidHonorTitle(h.title) || !h.level)
+  const canContinue = !hasJunk
+
   return (
     <div className={`question-slide slide-${direction}`}>
       <div className="slide-header">
@@ -79,6 +86,11 @@ export default function HonorsInput({
       </div>
 
       <div className="question-text">What are your top honors and awards?</div>
+      {hasJunk && (
+        <div className="question-hint question-hint--warn">
+          Give each honor a real name (at least {MIN_HONOR_CHARS} characters) and pick its level, or remove the row.
+        </div>
+      )}
 
       <div className="list-input-list">
         {honors.map((honor, i) => (
@@ -106,7 +118,10 @@ export default function HonorsInput({
 
       <div className="slide-footer">
         <button className="back-btn" onClick={onBack}>← Back</button>
-        <button className="next-btn active" onClick={onNext}>Continue →</button>
+        <button
+          className={`next-btn${canContinue ? ' active' : ''}`}
+          onClick={canContinue ? onNext : undefined}
+        >Continue →</button>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { isValidSat, isValidIelts, isValidGpa } from '../utils/validation'
 import '../styles/TestScoresInput.css'
 
 const GPA_SCALES = ['4', '5', '10', '100']
@@ -69,7 +70,14 @@ export default function TestScoresInput({
   const added   = OPTIONAL.filter(t => testScores[t.field] !== null)
 
   // GPA, IELTS, and SAT are all required — students without a given score enter "N/A".
-  const canContinue = REQUIRED.every(({ field }) => String(testScores[field] ?? '').trim())
+  const allFilled = REQUIRED.every(({ field }) => String(testScores[field] ?? '').trim())
+  // Real numbers must be in range — blocks SAT 9999, GPA 99/4, IELTS 50.
+  const badScores = [
+    !isValidSat(testScores.sat)                        && 'SAT (400–1600)',
+    !isValidIelts(testScores.ielts)                    && 'IELTS (0–9)',
+    !isValidGpa(testScores.gpa, testScores.gpaScale)   && `GPA (0–${testScores.gpaScale || 4})`,
+  ].filter(Boolean)
+  const canContinue = allFilled && badScores.length === 0
 
   return (
     <div className={`question-slide slide-${direction}`}>
@@ -82,6 +90,11 @@ export default function TestScoresInput({
       <div className="question-hint">
         GPA, IELTS, and SAT are required. Enter <strong>N/A</strong> for any you don't have.
       </div>
+      {badScores.length > 0 && (
+        <div className="question-hint question-hint--warn">
+          Please enter a valid {badScores.join(', ')}, or N/A.
+        </div>
+      )}
 
       <div className="test-scores-list">
         {REQUIRED.map(({ field, label }) => (

@@ -1,3 +1,4 @@
+import { isRealEssay, MIN_ESSAY_CHARS } from '../utils/validation'
 import '../styles/EssayInput.css'
 
 export default function EssayInput({
@@ -9,6 +10,14 @@ export default function EssayInput({
   sectionLabel,
   counter,
 }) {
+  // The essay is optional. Anything below the real-essay threshold (e.g. "Jj")
+  // is treated as a skip: clear it so it isn't stored or fed to scoring, and the
+  // personality quiz takes its place.
+  const counts = isRealEssay(essay)
+  function handleNext() {
+    if (!counts && essay.trim()) onUpdate('')
+    onNext()
+  }
   return (
     <div className={`question-slide slide-${direction}`}>
       <div className="slide-header">
@@ -31,12 +40,17 @@ export default function EssayInput({
           value={essay}
           onChange={e => onUpdate(e.target.value)}
         />
+        {essay.trim() && !counts && (
+          <div className="question-hint question-hint--warn">
+            A real essay needs at least {MIN_ESSAY_CHARS} characters — otherwise we'll skip it and ask a few quick questions instead.
+          </div>
+        )}
       </div>
 
       <div className="slide-footer">
         <button className="back-btn" onClick={onBack}>← Back</button>
-        <button className="next-btn active" onClick={onNext}>
-          {essay.trim() ? 'Continue →' : 'Skip →'}
+        <button className="next-btn active" onClick={handleNext}>
+          {counts ? 'Continue →' : 'Skip →'}
         </button>
       </div>
     </div>

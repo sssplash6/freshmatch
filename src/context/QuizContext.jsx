@@ -115,6 +115,10 @@ export function quizReducer(state, action) {
       return { ...state, efc: action.value }
     case 'SET_CONSENT':
       return { ...state, [action.field]: action.value }
+    case 'EDIT':
+      // Return from results to the portfolio questions so the student can fix
+      // gibberish/insufficient input and resubmit.
+      return { ...state, phase: 'section1', currentIndex: 0, direction: 'back' }
     case 'RESTART':
       return initialState
     default:

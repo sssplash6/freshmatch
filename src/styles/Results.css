@@ -107,6 +107,25 @@
   line-height: 1.75;
 }
 
+/* Shown on the "not enough information" screen — sends the student back to edit. */
+.results-edit-btn {
+  margin-top: 20px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+.results-edit-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
 /* ── Loading ─────────────────────────────────────────── */
 .results-loading {
   display: flex;

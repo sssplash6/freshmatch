@@ -391,6 +391,15 @@ export default function Results() {
           body: JSON.stringify({ name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers }),
         })
         const data = await res.json()
+        // The profile was judged gibberish / too sparse to assess — show a
+        // dedicated "not enough info" screen instead of a generic error.
+        if (res.status === 422 && data.insufficient) {
+          if (!cancelled) {
+            setErrorMsg(data.error || "We couldn't find enough real information to generate an assessment.")
+            setStatus('insufficient')
+          }
+          return
+        }
         if (!res.ok) throw new Error(data.error || `Server error ${res.status}`)
         if (!cancelled) {
           setDreamResults((data.dreamSchools || []).slice(0, 3))
@@ -471,6 +480,21 @@ export default function Results() {
                 <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Error</div>
                 <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>Something went wrong</div>
                 <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
+              </>
+            )}
+
+            {status === 'insufficient' && (
+              <>
+                <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Not enough information</div>
+                <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>We can't assess this profile yet</div>
+                <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
+                <button
+                  className="results-edit-btn res-rise"
+                  style={{ animationDelay: '230ms' }}
+                  onClick={() => dispatch({ type: 'EDIT' })}
+                >
+                  ← Go back and edit my answers
+                </button>
               </>
             )}
 
