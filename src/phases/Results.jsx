@@ -211,7 +211,7 @@ function ExpandedSchool({ school, index, total, isDream, onClose, onNav, navDirR
                       {isDream && school.chance != null && (
                         <>
                           <span className="school-expanded__score school-expanded__score--chance">{school.chance}</span>
-                          <span className="school-expanded__score-label">admission chance</span>
+                          <span className="school-expanded__score-label">strength</span>
                         </>
                       )}
                     </div>
@@ -345,7 +345,7 @@ function DreamSchoolTile({ school, onExpand, index, invisible }) {
         </div>
         <div className="dream-tile__score">
           {school.chance ?? school.fitScore}
-          <span className="dream-tile__score-label">chance</span>
+          <span className="dream-tile__score-label">strength</span>
         </div>
         <LogoBadge id={school.id} name={school.name} size="tile" />
         <div className="dream-tile__name">{school.name}</div>
