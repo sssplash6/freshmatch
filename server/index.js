@@ -30,10 +30,12 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
 
-// Per-IP cap on the expensive OpenRouter-backed endpoint. A real user submits the
-// quiz a handful of times at most; this throttles abusive loops without a global
-// ceiling that could lock out everyone late in the day.
-const narrateLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 5 });
+// Per-IP cap on the expensive OpenRouter-backed endpoint, tuned for LLM cost
+// control: one calculation per IP per 30 minutes. NOTE: this counts every hit
+// (including retries and gibberish "insufficient" resubmits), and many real
+// users can share one public IP behind carrier-grade NAT — so a busy network
+// effectively gets one run per half hour. Raise `max` if that proves too tight.
+const narrateLimiter = rateLimit({ windowMs: 30 * 60 * 1000, max: 1 });
 
 // Per-IP cap on the admin endpoint. The ADMIN_TOKEN is the only barrier to the
 // stored PII, so throttle to make online brute-forcing of the token infeasible

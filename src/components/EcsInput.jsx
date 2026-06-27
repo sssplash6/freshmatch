@@ -52,7 +52,7 @@ export default function EcsInput({
       </div>
       {hasJunk && (
         <div className="question-hint question-hint--warn">
-          Please describe each activity properly (at least {MIN_EC_CHARS} characters) — single letters don't count.
+          Please give each activity a real, specific description (at least {MIN_EC_CHARS} characters) — placeholder or mashed-up text doesn't count.
         </div>
       )}
 

@@ -18,8 +18,14 @@ export const MIN_EC_CHARS     = 12  // activities should describe scale/impact
 export const MIN_SCHOOL_CHARS = 3
 export const MIN_ESSAY_CHARS  = 80  // below this we treat the essay as skipped
 
-export const isValidHonorTitle = v => hasSubstance(v, MIN_HONOR_CHARS)
-export const isSubstantiveEc    = v => hasSubstance(v, MIN_EC_CHARS)
+// Keyboard-mash marker: 3+ identical letters in a row ("biii", "wentttt").
+// Triple letters essentially never occur in real spelling, so this is safe
+// against non-native English and ordinary typos — it just nudges the user away
+// from obvious junk before they submit. Mirrors looksMashed in server/routes/narrate.js.
+export const looksMashed = v => /([a-z])\1\1/i.test(v || '')
+
+export const isValidHonorTitle = v => hasSubstance(v, MIN_HONOR_CHARS) && !looksMashed(v)
+export const isSubstantiveEc    = v => hasSubstance(v, MIN_EC_CHARS) && !looksMashed(v)
 export const isValidSchoolName  = v => hasSubstance(v, MIN_SCHOOL_CHARS)
 export const isRealEssay        = v => (v || '').trim().length >= MIN_ESSAY_CHARS
 

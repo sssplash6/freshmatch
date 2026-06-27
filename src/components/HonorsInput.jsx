@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { isValidHonorTitle, MIN_HONOR_CHARS } from '../utils/validation'
+import { isValidHonorTitle } from '../utils/validation'
 import '../styles/HonorsInput.css'
 
 const MAX = 5
@@ -88,7 +88,7 @@ export default function HonorsInput({
       <div className="question-text">What are your top honors and awards?</div>
       {hasJunk && (
         <div className="question-hint question-hint--warn">
-          Give each honor a real name (at least {MIN_HONOR_CHARS} characters) and pick its level, or remove the row.
+          Give each honor a genuine name and pick its level, or remove the row.
         </div>
       )}
 

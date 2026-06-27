@@ -65,8 +65,16 @@ function hasSubstance(value, minChars = 3) {
   if (s.length < minChars) return false
   return new Set(s.replace(/\s+/g, '').toLowerCase()).size >= 2
 }
-const isRealHonor = h => hasSubstance(h?.title, 3)
-const isRealEc    = e => hasSubstance(e?.description, 12)
+
+// High-precision keyboard-mash marker: 3+ of the same letter in a row ("biii",
+// "wentttt", "aaaa"). Triple letters essentially never occur in real spelling,
+// so this is safe against genuine non-native English and typos — it only strips
+// the most obvious junk from the strength tally. The AI dataQuality gate does the
+// nuanced judgement (jokes, nonsense, mashed phrasing) that a regex can't.
+const looksMashed = value => /([a-z])\1\1/i.test(value || '')
+
+const isRealHonor = h => hasSubstance(h?.title, 3) && !looksMashed(h?.title)
+const isRealEc    = e => hasSubstance(e?.description, 12) && !looksMashed(e?.description)
 
 // Composite academic strength score (0–100) across SAT, GPA, honors, and ECs.
 // Honors level can compensate for a lower SAT — an olympiad winner with 1480 should
@@ -456,9 +464,14 @@ ${studentSummary}
 ${dreamSection}
 ${regularSection}
 
-FIRST, judge whether this profile contains enough GENUINE, COHERENT information to produce an honest assessment, and set "dataQuality":
-- "insufficient" — the free text the student entered (name, school, honors, activities, essay) is gibberish, random characters, keyboard mashing, placeholder, or otherwise meaningless (e.g. "asdf", "jjj", "test test", "h", repeated or random letters). The inputs aren't real, so any fit assessment would be meaningless.
-- "ok" — the student gave real, meaningful information. A sparse-but-real profile (valid scores with few or no activities and no essay) is still "ok". ONLY flag genuine gibberish — never penalize brevity, modest achievements, or imperfect English.
+FIRST, judge whether this is a GENUINE, good-faith submission worth assessing, and set "dataQuality". Judge the QUALITY and SERIOUSNESS of what the student actually WROTE (name, school, honors, activities, essay) — not merely whether fields are filled in. Valid test scores do NOT by themselves make a profile genuine when the written content is nonsense.
+- "insufficient" — the written content is not a real, good-faith description of this student. This covers:
+  • keyboard mashing or random characters ("asdf", "jjj", "h"), placeholder or test text;
+  • typed-out nonsense or mashed words ("swcooking hahahaha biii", "swimsming wentttt to pool", "chess 122223 years");
+  • "activities" that are not real activities, are jokes, or are meaningless;
+  • essays that are jokey, trolling, sarcastic, boastful nonsense, or otherwise not a sincere attempt (e.g. "i like harvard, they also like me because im strong, smart and handsome, they cannot reject me").
+  If MOST of the activities and the essay are like this, return "insufficient" EVEN IF the scores are valid — a fit assessment built on fake or joke content would be meaningless and misleading.
+- "ok" — the student made a sincere attempt with real, meaningful content. CRITICAL: do NOT flag a profile for being sparse, brief, modest, or written in imperfect / non-native English. Simple phrasing, spelling mistakes, short descriptions, few or no activities, or no essay at all are ALL "ok" (a profile with only valid scores and nothing else is "ok"). The bar for "insufficient" is meaninglessness or bad faith — NEVER lack of polish, ambition, or fluency. When genuinely torn between a sincere ESL student and gibberish, lean "ok"; but obvious joke / troll / mashed content is "insufficient".
 If "insufficient", DO NOT evaluate any schools. Return ONLY:
 { "dataQuality": "insufficient", "insufficientReason": "<one short, friendly sentence telling the student what to fill in properly>" }
 
