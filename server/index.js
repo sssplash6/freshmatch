@@ -31,11 +31,10 @@ app.set('trust proxy', 1);
 app.use(express.json());
 
 // Per-IP cap on the expensive OpenRouter-backed endpoint, tuned for LLM cost
-// control: one calculation per IP per 30 minutes. NOTE: this counts every hit
-// (including retries and gibberish "insufficient" resubmits), and many real
-// users can share one public IP behind carrier-grade NAT — so a busy network
-// effectively gets one run per half hour. Raise `max` if that proves too tight.
-const narrateLimiter = rateLimit({ windowMs: 30 * 60 * 1000, max: 1 });
+// control: 4 calculations per IP per 30 minutes. This counts every hit (including
+// retries and gibberish "insufficient" resubmits), so the headroom also leaves a
+// shared/NAT'd network and a user fixing their answers room to get through.
+const narrateLimiter = rateLimit({ windowMs: 30 * 60 * 1000, max: 4 });
 
 // Per-IP cap on the admin endpoint. The ADMIN_TOKEN is the only barrier to the
 // stored PII, so throttle to make online brute-forcing of the token infeasible
