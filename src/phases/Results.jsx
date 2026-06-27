@@ -354,39 +354,88 @@ function DreamSchoolTile({ school, onExpand, index, invisible }) {
   )
 }
 
-// Share button — native share sheet on mobile, copy-to-clipboard fallback on
-// desktop. Only rendered once we have a share token from the server.
+// Share button — native share sheet where available (mostly mobile), with a
+// copy-to-clipboard fallback for everything else. Robust by design: native share
+// failing for any reason other than a deliberate user cancel falls through to
+// copy, and copy itself has a legacy execCommand fallback, so a click always
+// does something visible.
 function ShareButton({ token }) {
   const [copied, setCopied] = useState(false)
   const url = `${window.location.origin}/r/${token}`
 
-  async function onShare() {
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try { await navigator.share({ title: 'My FreshMatch college matches', text: 'See where I actually fit 👇', url }) }
-      catch { /* user dismissed the native sheet */ }
-      return
-    }
+  function flagCopied() {
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function copyLink() {
     try {
       await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch { /* clipboard unavailable */ }
+      flagCopied()
+      return
+    } catch { /* clipboard API blocked / non-secure context — fall back */ }
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      flagCopied()
+    } catch {
+      window.prompt('Copy your results link:', url)
+    }
+  }
+
+  async function onShare() {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: 'My FreshMatch college matches', text: 'I just got my college matches — find yours in 5 min 👇', url })
+        return
+      } catch (e) {
+        if (e?.name === 'AbortError') return  // user dismissed the sheet — don't also copy
+        // any other failure (unsupported, not allowed) → fall through to copy
+      }
+    }
+    copyLink()
   }
 
   return (
-    <button className="share-btn" onClick={onShare}>
-      {copied ? '✓ Link copied' : '🔗 Share my results'}
+    <button className="share-btn share-btn--inline" onClick={onShare}>
+      {copied ? '✓ Link copied' : '🔗 Share'}
     </button>
   )
+}
+
+// Max school-grid columns that stay legible at a given viewport width. The grid
+// column count is an inline style (so it can't be overridden by a CSS media
+// query), hence the responsive cap lives here instead of in CSS — otherwise a
+// 12-school result forces 6 columns onto a phone and the tiles collapse.
+function maxColsForViewport() {
+  const w = typeof window !== 'undefined' ? window.innerWidth : 1280
+  if (w <= 400) return 2
+  if (w <= 560) return 3
+  if (w <= 760) return 4
+  return 6
 }
 
 // Presentational results screen — pure, driven entirely by props so it renders
 // identically for the live quiz and for a read-only shared link (/r/:token).
 // `actions` is the slot under the results for the buttons that differ by context
 // (Share + Start Over when live; "Take the quiz yourself" on a shared view).
-export function ResultsView({ name, personalityType, schools = [], dreamResults = [], recommendation, actions }) {
+export function ResultsView({ name, personalityType, schools = [], dreamResults = [], recommendation, actions, titleAction }) {
   const [expandedIndex, setExpandedIndex] = useState(null)
+  const [maxCols, setMaxCols] = useState(maxColsForViewport)
   const navDirRef = useRef(0)
+
+  // Re-clamp the grid columns when the viewport changes (resize / orientation).
+  useEffect(() => {
+    const onResize = () => setMaxCols(maxColsForViewport())
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   // Unified pool for expanded modal navigation (dream first, then regular)
   const allSchools = [...dreamResults, ...schools]
@@ -409,9 +458,10 @@ export function ResultsView({ name, personalityType, schools = [], dreamResults 
     setExpandedIndex(null)
   }, [])
 
-  const regularCols = schools.length <= 4
+  const desiredCols = schools.length <= 4
     ? (schools.length || 1)
     : Math.min(6, Math.ceil(schools.length / 2))
+  const regularCols = Math.min(desiredCols, maxCols)
 
   const totalCount = dreamResults.length + schools.length
 
@@ -428,10 +478,13 @@ export function ResultsView({ name, personalityType, schools = [], dreamResults 
 
             {personalityType && <PersonalityBadge type={personalityType} />}
             <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
-            <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
-              {totalCount > 0
-                ? `${totalCount} schools for ${name || 'you'}`
-                : 'No financial matches found'}
+            <div className="results-title-row res-rise" style={{ animationDelay: '110ms' }}>
+              <h1 className="results-title">
+                {totalCount > 0
+                  ? `${totalCount} schools for ${name || 'you'}`
+                  : 'No financial matches found'}
+              </h1>
+              {totalCount > 0 && titleAction}
             </div>
             {totalCount === 0 && (
               <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
@@ -571,6 +624,8 @@ export default function Results() {
         setDreamResults([n('cornell','Cornell University',82,70), n('nyuad','NYU Abu Dhabi',91,64), n('stanford','Stanford University',79,64)])
         setSchools([n('gu-q','Georgetown University Qatar',95), n('princeton','Princeton University',90), n('upenn','University of Pennsylvania',89), n('williams','Williams College',87), n('amherst','Amherst College',85), n('claremont-mckenna','Claremont McKenna College',84), n('tufts','Tufts University',82), n('middlebury','Middlebury College',78), n('hamilton','Hamilton College',76), n('colby','Colby College',74), n('macalester','Macalester College',72)])
         setPersonalityType('business')
+        setRecommendation('full-support')
+        setShareToken('sample')  // so the Share button renders in ?sample preview
         setStatus('done')
         return
       }
@@ -636,13 +691,11 @@ export default function Results() {
         schools={schools}
         dreamResults={dreamResults}
         recommendation={recommendation || getRecommendation(testScores, honors, extracurriculars)}
+        titleAction={shareToken && <ShareButton token={shareToken} />}
         actions={
-          <>
-            {shareToken && <ShareButton token={shareToken} />}
-            <button className="restart-btn" onClick={() => dispatch({ type: 'RESTART' })}>
-              ↺ Start Over
-            </button>
-          </>
+          <button className="restart-btn" onClick={() => dispatch({ type: 'RESTART' })}>
+            ↺ Start Over
+          </button>
         }
       />
     )

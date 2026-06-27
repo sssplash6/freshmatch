@@ -1,0 +1,117 @@
+/* ============================================================================
+   Mobile optimization layer.
+   Imported after global.css. Cross-component overrides are scoped under `.app`
+   so their single-class targets reliably win over component styles regardless
+   of CSS bundle order. Surface-specific responsive rules still live in each
+   component's own stylesheet; this file holds the app-wide mobile foundations.
+   ============================================================================ */
+
+/* Stop iOS from inflating text in landscape; kill the grey tap-flash on every
+   interactive element (we provide our own :active / selected feedback). */
+html { -webkit-text-size-adjust: 100%; }
+
+button, a, [role="button"], input, label, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Drop the legacy 300ms tap delay on the things people tap most. */
+button, a, [role="button"], .option, .efc-slide__option, .grade-pill {
+  touch-action: manipulation;
+}
+
+/* Prefer the dynamic viewport unit so mobile browser chrome doesn't leave a dead
+   gap below the fold or clip centered content. */
+@supports (min-height: 100dvh) {
+  .app { min-height: 100dvh; }
+}
+
+/* ── iOS auto-zooms when a focused field's font-size is < 16px. Raise every
+   text-entry control to 16px on phones. (.intake-input is already 20px.) ──── */
+@media (max-width: 640px) {
+  .app input:not(.intake-input):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .app textarea,
+  .app select {
+    font-size: 16px;
+  }
+}
+
+/* ── Phone layout (≤480px) ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .app {
+    padding: 14px;
+    overflow-x: hidden;            /* belt-and-suspenders against sideways scroll */
+  }
+
+  /* Tighten the generous 32px gutters inside the quiz card. */
+  .app .slide-header, .app .question-text, .app .options, .app .slide-footer,
+  .app .efc-slide__meta, .app .efc-slide__question, .app .efc-slide__hint,
+  .app .efc-slide__options, .app .efc-slide__actions,
+  .app .intake-fields, .app .intake-field-wrap, .app .question-hint,
+  .app .test-scores-list, .app .list-input-list, .app .essay-field-wrap {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* Footers: extra bottom room so Back/Next clear the floating theme toggle. */
+  .app .slide-footer, .app .efc-slide__actions {
+    padding-bottom: 56px;
+  }
+
+  /* Real touch targets for the text-only "back" links (negative margin keeps
+     the visual layout unchanged while enlarging the hit area). */
+  .app .back-btn, .app .efc-slide__back {
+    padding: 10px 6px;
+    margin: -10px -6px;
+  }
+
+  /* Question copy a touch smaller so it doesn't dominate a small screen. */
+  .app .question-text, .app .efc-slide__question { font-size: 19px; }
+
+  /* ── Results page ── */
+  .app .results-title { font-size: 25px; }
+  .app .cta-name { font-size: 27px; }
+  .app .cta-top-row { gap: 16px; }
+  .app .cta-btn { width: 100%; }
+
+  /* Expanded school modal: dynamic vh + a finger-sized close button. */
+  .app .school-modal-wrap { padding: 14px; }
+  .app .school-expanded { max-height: calc(100dvh - 28px); }
+  .app .school-expanded__close { width: 34px; height: 34px; font-size: 13px; }
+
+  /* Keep the Start Over / Share row clear of the toggle. */
+  .app .results-page { padding-bottom: 56px; }
+}
+
+/* ── Floating theme toggle: compact + safe-area aware on phones. ─────────── */
+@media (max-width: 480px) {
+  .app .theme-toggle {
+    bottom: max(14px, env(safe-area-inset-bottom));
+    right: max(14px, env(safe-area-inset-right));
+    padding: 6px 11px;
+    font-size: 10px;
+  }
+}
+
+/* ── Neutralize sticky :hover states on touch devices, where :hover latches
+   after a tap and leaves controls looking stuck-on. ─────────────────────── */
+@media (hover: none) {
+  .app .option:not(.selected):not(.dimmed):hover { background-color: transparent; }
+  .app .option:not(.selected):not(.dimmed):hover .option-text { color: var(--ink); }
+  .app .option:not(.selected):not(.dimmed):hover .option-letter {
+    border-color: var(--rule); color: var(--muted);
+  }
+  .app .efc-slide__option:hover:not(.efc-slide__option--selected) { background-color: transparent; }
+  .app .grade-pill:hover { border-color: var(--rule-strong); color: var(--ink); }
+  .app .next-btn.active:hover, .app .efc-slide__next:not(:disabled):hover {
+    background: var(--orange); border-color: var(--orange);
+  }
+  .app .cta-btn:hover { transform: none; }
+  .app .cta-btn:hover .cta-btn__backdrop { background: var(--orange); }
+  .app .share-btn:hover { transform: none; background: var(--orange); }
+
+  /* Provide a clear press feedback in place of hover for the option rows. */
+  .app .option:active:not(.selected),
+  .app .efc-slide__option:active:not(.efc-slide__option--selected) {
+    background-color: var(--selected-bg);
+  }
+}

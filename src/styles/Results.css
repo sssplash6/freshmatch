@@ -89,8 +89,20 @@
   color: var(--ink);
   line-height: 1.18;
   letter-spacing: -0.3px;
-  margin-bottom: 6px;
+  margin: 0;
   font-optical-sizing: auto;
+}
+
+/* Title + inline Share button on one line: title takes the room it needs, the
+   button sits at the end, vertically centered with the text. Wraps gracefully
+   on narrow screens. */
+.results-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
 
 .results-subtitle {
@@ -763,6 +775,13 @@
 
 .share-btn:hover { background: var(--orange-hi, #d97b00); transform: translateY(-1px); }
 .share-btn:active { transform: translateY(0); }
+
+/* Compact variant for sitting inline next to the results title. */
+.share-btn--inline {
+  font-size: 11px;
+  padding: 8px 15px;
+  flex-shrink: 0;
+}
 
 .shared-cta-line {
   font-family: var(--font-sans);
