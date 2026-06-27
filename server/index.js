@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import narrateRouter from './routes/narrate.js';
 import submissionsRouter from './routes/submissions.js';
+import shareRouter from './routes/share.js';
 import { rateLimit } from './rateLimit.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -26,8 +27,14 @@ const narrateLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 5 });
 // modals, exporting). 60 requests / 5 min per IP is far below any brute-force rate.
 const adminLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 60 });
 
+// Public shared-results reads are cheap (single indexed lookup) but uncapped
+// reads invite enumeration/scraping. 120 / 5 min per IP is ample for a person
+// opening a few shared links while making bulk token-guessing pointless.
+const shareLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 120 });
+
 app.use('/api/narrate', narrateLimiter, narrateRouter);
 app.use('/api/submissions', adminLimiter, submissionsRouter);
+app.use('/api/r', shareLimiter, shareRouter);
 
 // Serve the built frontend from the same service so relative /api calls resolve.
 app.use(express.static(DIST));

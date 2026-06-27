@@ -738,7 +738,39 @@
 .results-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 18px;
 }
+
+/* Share my results (live) / Take the quiz yourself (shared view) — the growth
+   loop's primary action, so it reads as a brand-accent pill, not a quiet link. */
+.share-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #fff;
+  background: var(--orange);
+  border: none;
+  border-radius: 999px;
+  padding: 11px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.share-btn:hover { background: var(--orange-hi, #d97b00); transform: translateY(-1px); }
+.share-btn:active { transform: translateY(0); }
+
+.shared-cta-line {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--faint);
+}
+
+.shared-cta-line strong { color: var(--ink); }
 
 .restart-btn {
   font-family: var(--font-sans);

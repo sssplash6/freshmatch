@@ -4,6 +4,7 @@ import Landing from './phases/Landing'
 import Intake from './phases/Intake'
 import Section1 from './phases/Section1'
 import Results from './phases/Results'
+import SharedResults from './phases/SharedResults'
 import Admin from './admin/Admin'
 
 function Quiz() {
@@ -40,20 +41,31 @@ function ThemeToggle() {
 }
 
 export default function App() {
-  // The /admin scouting dashboard is a separate surface from the quiz. The SPA
-  // fallback serves index.html for /admin, so we branch on the path here.
-  const isAdmin = typeof window !== 'undefined'
-    && window.location.pathname.replace(/\/+$/, '') === '/admin'
+  // /admin (scouting dashboard) and /r/:token (shared results) are separate
+  // surfaces from the quiz. The SPA fallback serves index.html for both, so we
+  // branch on the path here rather than pulling in a router.
+  const path = typeof window !== 'undefined'
+    ? window.location.pathname.replace(/\/+$/, '')
+    : ''
+  const isAdmin = path === '/admin'
+  const shareMatch = path.match(/^\/r\/([A-Za-z0-9_-]+)$/)
+
+  let surface
+  if (isAdmin) {
+    surface = <Admin />
+  } else if (shareMatch) {
+    surface = <SharedResults token={shareMatch[1]} />
+  } else {
+    surface = (
+      <QuizProvider>
+        <Quiz />
+      </QuizProvider>
+    )
+  }
 
   return (
     <div className="app">
-      {isAdmin ? (
-        <Admin />
-      ) : (
-        <QuizProvider>
-          <Quiz />
-        </QuizProvider>
-      )}
+      {surface}
       <ThemeToggle />
     </div>
   )

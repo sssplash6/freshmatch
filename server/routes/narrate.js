@@ -287,6 +287,19 @@ function compressSchool(school) {
   ].filter(Boolean).join('\n')
 }
 
+// Which Freshman Academy program to surface in the results CTA. Stored in the
+// payload so the shared results page can show the right program without ever
+// exposing the underlying scores/honors. Mirrors getRecommendation in
+// src/phases/Results.jsx — keep the two in sync.
+function recommendProgram(testScores, honors, extracurriculars) {
+  const sat = parseInt(testScores?.sat) || 0
+  const topHonors = (honors || []).filter(h => h.level === 'intl' || h.level === 'natl').length
+  const filledEcs = (extracurriculars || []).filter(e => e.description?.trim()).length
+  if (sat >= 1500 && (topHonors >= 1 || filledEcs >= 5)) return 'full-support'
+  if (topHonors >= 2 && filledEcs >= 5) return 'full-support'
+  return 'admissions'
+}
+
 const router = Router()
 
 // Same profile → same response, byte for byte. Also saves the OpenRouter call
@@ -315,16 +328,19 @@ router.post('/', async (req, res) => {
     cacheKey = JSON.stringify({ name, country, grade, testScores, extracurriculars, honors, essay, personality, majors, dreamSchools, efc })
     if (responseCache.has(cacheKey)) {
       const payload = responseCache.get(cacheKey)
-      saveSubmission(req.body, payload)  // different user, same academic profile → still record it
+      // Different user, same academic profile → still record it, with its own
+      // fresh share token (the token must not be reused across rows/users).
+      const token = saveSubmission(req.body, payload)
       if (payload?.insufficient) return res.status(422).json({ error: payload.reason, insufficient: true })
-      return res.json(payload)
+      return res.json({ ...payload, shareToken: token })
     }
     if (inflight.has(cacheKey)) {
       // A concurrent duplicate of THIS request (e.g. React StrictMode double-mount).
-      // The original request records the submission; don't double-count it here.
-      const payload = await inflight.get(cacheKey)
+      // The original request records the submission; we reuse its token here so
+      // both mounts can build the same share link without double-counting.
+      const { payload, token } = await inflight.get(cacheKey)
       if (payload?.insufficient) return res.status(422).json({ error: payload.reason, insufficient: true })
-      return res.json(payload)
+      return res.json({ ...payload, shareToken: token })
     }
     const inflightPromise = new Promise((resolve, reject) => {
       settleInflight = { resolve, reject }
@@ -369,10 +385,10 @@ router.post('/', async (req, res) => {
 
     if (eligible.length === 0 && dreamPool.length === 0) {
       const empty = { schools: [], dreamSchools: [] }
-      saveSubmission(req.body, empty)  // fire-and-forget; never blocks the response
-      settleInflight?.resolve(empty)
+      const token = saveSubmission(req.body, empty)
+      settleInflight?.resolve({ payload: empty, token })
       inflight.delete(cacheKey)
-      return res.json(empty)
+      return res.json({ ...empty, shareToken: token })
     }
 
     // Cap to avoid ballooning input tokens for high-EFC students.
@@ -575,8 +591,8 @@ No markdown, no extra keys. Output "dataQuality" first; if it is "insufficient",
       const payload = { insufficient: true, reason }
       if (responseCache.size >= CACHE_MAX) responseCache.delete(responseCache.keys().next().value)
       responseCache.set(cacheKey, payload)
-      saveSubmission(req.body, payload)
-      settleInflight?.resolve(payload)
+      const token = saveSubmission(req.body, payload)
+      settleInflight?.resolve({ payload, token })
       inflight.delete(cacheKey)
       return res.status(422).json({ error: reason, insufficient: true })
     }
@@ -636,13 +652,14 @@ No markdown, no extra keys. Output "dataQuality" first; if it is "insufficient",
     }
     dreamResults.sort(byChanceDesc)
 
-    const payload = { personalityType, schools: results, dreamSchools: dreamResults }
+    const recommendation = recommendProgram(testScores, honors, extracurriculars)
+    const payload = { personalityType, recommendation, schools: results, dreamSchools: dreamResults }
     if (responseCache.size >= CACHE_MAX) responseCache.delete(responseCache.keys().next().value)
     responseCache.set(cacheKey, payload)
-    saveSubmission(req.body, payload)  // fire-and-forget; one row per fresh computation
-    settleInflight?.resolve(payload)
+    const token = saveSubmission(req.body, payload)  // one row + fresh token per computation
+    settleInflight?.resolve({ payload, token })
     inflight.delete(cacheKey)
-    res.json(payload)
+    res.json({ ...payload, shareToken: token })
   } catch (err) {
     settleInflight?.reject(err)
     if (cacheKey) inflight.delete(cacheKey)

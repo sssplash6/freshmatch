@@ -354,6 +354,203 @@ function DreamSchoolTile({ school, onExpand, index, invisible }) {
   )
 }
 
+// Share button — native share sheet on mobile, copy-to-clipboard fallback on
+// desktop. Only rendered once we have a share token from the server.
+function ShareButton({ token }) {
+  const [copied, setCopied] = useState(false)
+  const url = `${window.location.origin}/r/${token}`
+
+  async function onShare() {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try { await navigator.share({ title: 'My FreshMatch college matches', text: 'See where I actually fit 👇', url }) }
+      catch { /* user dismissed the native sheet */ }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch { /* clipboard unavailable */ }
+  }
+
+  return (
+    <button className="share-btn" onClick={onShare}>
+      {copied ? '✓ Link copied' : '🔗 Share my results'}
+    </button>
+  )
+}
+
+// Presentational results screen — pure, driven entirely by props so it renders
+// identically for the live quiz and for a read-only shared link (/r/:token).
+// `actions` is the slot under the results for the buttons that differ by context
+// (Share + Start Over when live; "Take the quiz yourself" on a shared view).
+export function ResultsView({ name, personalityType, schools = [], dreamResults = [], recommendation, actions }) {
+  const [expandedIndex, setExpandedIndex] = useState(null)
+  const navDirRef = useRef(0)
+
+  // Unified pool for expanded modal navigation (dream first, then regular)
+  const allSchools = [...dreamResults, ...schools]
+
+  const handleExpand = useCallback((index) => {
+    navDirRef.current = 0
+    setExpandedIndex(index)
+  }, [])
+
+  const handleNav = useCallback((direction) => {
+    navDirRef.current = direction
+    setExpandedIndex(prev => {
+      const next = prev + direction
+      return next < 0 || next >= allSchools.length ? prev : next
+    })
+  }, [allSchools.length])
+
+  const handleClose = useCallback(() => {
+    navDirRef.current = 0
+    setExpandedIndex(null)
+  }, [])
+
+  const regularCols = schools.length <= 4
+    ? (schools.length || 1)
+    : Math.min(6, Math.ceil(schools.length / 2))
+
+  const totalCount = dreamResults.length + schools.length
+
+  return (
+    <>
+      <div className="results-page">
+        {/* ── Above-fold: fills at least full viewport so CTA always requires scrolling ── */}
+        <div className="results-above-fold">
+          <div className="results-header">
+            <img className="results-brand" src={`${import.meta.env.BASE_URL}brand-shield.png`} alt="Freshman Academy" />
+            <div className="results-complete res-rise" style={{ animationDelay: '0ms' }}>
+              <span className="results-check">✓</span> Assessment complete
+            </div>
+
+            {personalityType && <PersonalityBadge type={personalityType} />}
+            <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
+            <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
+              {totalCount > 0
+                ? `${totalCount} schools for ${name || 'you'}`
+                : 'No financial matches found'}
+            </div>
+            {totalCount === 0 && (
+              <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
+                No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.
+              </p>
+            )}
+          </div>
+
+          {totalCount > 0 && (
+            <div className="click-nudge" aria-hidden="true">
+              <span className="click-nudge__text">psst… tap a card!</span>
+            </div>
+          )}
+
+          {/* ── Dream schools row ─── */}
+          {dreamResults.length > 0 && (
+            <motion.div
+              className="dream-schools-section"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.06, delayChildren: 0.12 } },
+              }}
+            >
+              <div className="dream-schools-eyebrow">Your dream schools</div>
+              <div className="dream-schools-grid">
+                {dreamResults.map((school, i) => (
+                  <motion.div
+                    key={school.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 22, scale: 0.93 },
+                      visible: {
+                        opacity: 1, y: 0, scale: 1,
+                        transition: { type: 'spring', stiffness: 240, damping: 22 },
+                      },
+                    }}
+                  >
+                    <DreamSchoolTile
+                      school={school}
+                      index={i}
+                      onExpand={handleExpand}
+                      invisible={expandedIndex === i}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Regular matches grid ─── */}
+          {schools.length > 0 && (
+            <motion.div
+              className="school-grid"
+              style={{ gridTemplateColumns: `repeat(${regularCols}, 1fr)` }}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.04, delayChildren: dreamResults.length > 0 ? 0.32 : 0.18 } },
+              }}
+            >
+              {schools.map((school, i) => (
+                <motion.div
+                  key={school.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 20, scale: 0.94 },
+                    visible: {
+                      opacity: 1, y: 0, scale: 1,
+                      transition: { type: 'spring', stiffness: 260, damping: 22 },
+                    },
+                  }}
+                >
+                  <SchoolTile
+                    school={school}
+                    index={i}
+                    onExpand={(idx) => handleExpand(idx + dreamResults.length)}
+                    invisible={expandedIndex === i + dreamResults.length}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {totalCount > 0 && (
+            <div className="results-scroll-nudge">
+              <span>Your next step</span>
+              <span className="nudge-arrow">↓</span>
+            </div>
+          )}
+        </div>
+
+        {/* ── CTA: always below the fold ── */}
+        {totalCount > 0 && <CtaSection rec={recommendation} />}
+
+        <div className="results-divider res-rise" style={{ animationDelay: '200ms' }} />
+        <div className="results-actions res-rise" style={{ animationDelay: '240ms' }}>
+          {actions}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {expandedIndex !== null && allSchools[expandedIndex] && (
+          <ExpandedSchool
+            key="expanded"
+            school={allSchools[expandedIndex]}
+            index={expandedIndex}
+            total={allSchools.length}
+            isDream={expandedIndex < dreamResults.length}
+            onClose={handleClose}
+            onNav={handleNav}
+            navDirRef={navDirRef}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
 export default function Results() {
   const { state, dispatch } = useQuiz()
   const { name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers } = state
@@ -362,13 +559,9 @@ export default function Results() {
   const [schools, setSchools]       = useState([])
   const [dreamResults, setDreamResults] = useState([])
   const [personalityType, setPersonalityType] = useState(null)
+  const [recommendation, setRecommendation] = useState(null)
+  const [shareToken, setShareToken] = useState(null)
   const [errorMsg, setErrorMsg]     = useState('')
-  const [expandedIndex, setExpandedIndex] = useState(null)
-  const [expandedPool, setExpandedPool]   = useState('regular') // 'regular' | 'dream'
-  const navDirRef = useRef(0)
-
-  // Unified pool for expanded modal navigation (dream first, then regular)
-  const allSchools = [...dreamResults, ...schools]
 
   useEffect(() => {
     let cancelled = false
@@ -405,6 +598,8 @@ export default function Results() {
           setDreamResults((data.dreamSchools || []).slice(0, 3))
           setSchools((data.schools || []).slice(0, MAX_SCHOOLS))
           setPersonalityType(data.personalityType || null)
+          setRecommendation(data.recommendation || null)
+          setShareToken(data.shareToken || null)
           setStatus('done')
         }
       } catch (err) {
@@ -430,201 +625,75 @@ export default function Results() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [])
 
-  const handleExpand = useCallback((index) => {
-    navDirRef.current = 0
-    setExpandedIndex(index)
-  }, [])
+  // The done state renders through the shared, presentational ResultsView so the
+  // live quiz and a shared /r/:token link look identical. Live-only actions:
+  // share the results (once we have a token) and start over.
+  if (status === 'done') {
+    return (
+      <ResultsView
+        name={name}
+        personalityType={personalityType}
+        schools={schools}
+        dreamResults={dreamResults}
+        recommendation={recommendation || getRecommendation(testScores, honors, extracurriculars)}
+        actions={
+          <>
+            {shareToken && <ShareButton token={shareToken} />}
+            <button className="restart-btn" onClick={() => dispatch({ type: 'RESTART' })}>
+              ↺ Start Over
+            </button>
+          </>
+        }
+      />
+    )
+  }
 
-  const handleNav = useCallback((direction) => {
-    navDirRef.current = direction
-    setExpandedIndex(prev => {
-      const next = prev + direction
-      return next < 0 || next >= allSchools.length ? prev : next
-    })
-  }, [allSchools.length])
-
-  const handleClose = useCallback(() => {
-    navDirRef.current = 0
-    setExpandedIndex(null)
-  }, [])
-
-  const rec = getRecommendation(testScores, honors, extracurriculars)
-
-  const regularCols = schools.length <= 4
-    ? (schools.length || 1)
-    : Math.min(6, Math.ceil(schools.length / 2))
-
-  const totalCount = dreamResults.length + schools.length
-
+  // Loading / error / insufficient — the pre-results states, owned by the live flow.
   return (
-    <>
-      <div className="results-page">
-        {/* ── Above-fold: fills at least full viewport so CTA always requires scrolling ── */}
-        <div className="results-above-fold">
-          <div className="results-header">
-            {status === 'done' && (
-              <img className="results-brand" src={`${import.meta.env.BASE_URL}brand-shield.png`} alt="Freshman Academy" />
-            )}
-            <div className="results-complete res-rise" style={{ animationDelay: '0ms' }}>
-              <span className="results-check">✓</span> Assessment complete
-            </div>
-
-            {status === 'loading' && (
-              <div className="res-rise" style={{ animationDelay: '60ms' }}>
-                <LoadingBar />
-              </div>
-            )}
-
-            {status === 'error' && (
-              <>
-                <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Error</div>
-                <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>Something went wrong</div>
-                <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
-              </>
-            )}
-
-            {status === 'insufficient' && (
-              <>
-                <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Not enough information</div>
-                <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>We can't assess this profile yet</div>
-                <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
-                <button
-                  className="results-edit-btn res-rise"
-                  style={{ animationDelay: '230ms' }}
-                  onClick={() => dispatch({ type: 'EDIT' })}
-                >
-                  ← Go back and edit my answers
-                </button>
-              </>
-            )}
-
-            {status === 'done' && (
-              <>
-                {personalityType && <PersonalityBadge type={personalityType} />}
-                <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>College Matches</div>
-                <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>
-                  {totalCount > 0
-                    ? `${totalCount} schools for ${name || 'you'}`
-                    : 'No financial matches found'}
-                </div>
-                {totalCount === 0 && (
-                  <p className="results-subtitle res-rise" style={{ animationDelay: '150ms' }}>
-                    No schools met both your academic and financial requirements. Contact Freshman Academy for personalized guidance.
-                  </p>
-                )}
-              </>
-            )}
+    <div className="results-page">
+      <div className="results-above-fold">
+        <div className="results-header">
+          <div className="results-complete res-rise" style={{ animationDelay: '0ms' }}>
+            <span className="results-check">✓</span> Assessment complete
           </div>
 
-          {status === 'done' && totalCount > 0 && (
-            <div className="click-nudge" aria-hidden="true">
-              <span className="click-nudge__text">psst… tap a card!</span>
+          {status === 'loading' && (
+            <div className="res-rise" style={{ animationDelay: '60ms' }}>
+              <LoadingBar />
             </div>
           )}
 
-          {/* ── Dream schools row ─── */}
-          {status === 'done' && dreamResults.length > 0 && (
-            <motion.div
-              className="dream-schools-section"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: {},
-                visible: { transition: { staggerChildren: 0.06, delayChildren: 0.12 } },
-              }}
-            >
-              <div className="dream-schools-eyebrow">Your dream schools</div>
-              <div className="dream-schools-grid">
-                {dreamResults.map((school, i) => (
-                  <motion.div
-                    key={school.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 22, scale: 0.93 },
-                      visible: {
-                        opacity: 1, y: 0, scale: 1,
-                        transition: { type: 'spring', stiffness: 240, damping: 22 },
-                      },
-                    }}
-                  >
-                    <DreamSchoolTile
-                      school={school}
-                      index={i}
-                      onExpand={handleExpand}
-                      invisible={expandedIndex === i}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+          {status === 'error' && (
+            <>
+              <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Error</div>
+              <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>Something went wrong</div>
+              <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
+            </>
           )}
 
-          {/* ── Regular matches grid ─── */}
-          {status === 'done' && schools.length > 0 && (
-            <motion.div
-              className="school-grid"
-              style={{ gridTemplateColumns: `repeat(${regularCols}, 1fr)` }}
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: {},
-                visible: { transition: { staggerChildren: 0.04, delayChildren: dreamResults.length > 0 ? 0.32 : 0.18 } },
-              }}
-            >
-              {schools.map((school, i) => (
-                <motion.div
-                  key={school.id}
-                  variants={{
-                    hidden: { opacity: 0, y: 20, scale: 0.94 },
-                    visible: {
-                      opacity: 1, y: 0, scale: 1,
-                      transition: { type: 'spring', stiffness: 260, damping: 22 },
-                    },
-                  }}
-                >
-                  <SchoolTile
-                    school={school}
-                    index={i}
-                    onExpand={(idx) => handleExpand(idx + dreamResults.length)}
-                    invisible={expandedIndex === i + dreamResults.length}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
+          {status === 'insufficient' && (
+            <>
+              <div className="results-eyebrow res-rise" style={{ animationDelay: '60ms' }}>Not enough information</div>
+              <div className="results-title res-rise" style={{ animationDelay: '110ms' }}>We can't assess this profile yet</div>
+              <p className="results-desc res-rise" style={{ animationDelay: '170ms' }}>{errorMsg}</p>
+              <button
+                className="results-edit-btn res-rise"
+                style={{ animationDelay: '230ms' }}
+                onClick={() => dispatch({ type: 'EDIT' })}
+              >
+                ← Go back and edit my answers
+              </button>
+            </>
           )}
-
-          {status === 'done' && totalCount > 0 && (
-            <div className="results-scroll-nudge">
-              <span>Your next step</span>
-              <span className="nudge-arrow">↓</span>
-            </div>
-          )}
-        </div>
-
-        {/* ── CTA: always below the fold ── */}
-        {status === 'done' && totalCount > 0 && <CtaSection rec={rec} />}
-
-        <div className="results-divider res-rise" style={{ animationDelay: '200ms' }} />
-        <div className="results-actions res-rise" style={{ animationDelay: '240ms' }}>
-          <button className="restart-btn" onClick={() => dispatch({ type: 'RESTART' })}>
-            ↺ Start Over
-          </button>
         </div>
       </div>
 
-      <AnimatePresence>
-        {expandedIndex !== null && allSchools[expandedIndex] && (
-          <ExpandedSchool
-            key="expanded"
-            school={allSchools[expandedIndex]}
-            index={expandedIndex}
-            total={allSchools.length}
-            isDream={expandedIndex < dreamResults.length}
-            onClose={handleClose}
-            onNav={handleNav}
-            navDirRef={navDirRef}
-          />
-        )}
-      </AnimatePresence>
-    </>
+      <div className="results-divider res-rise" style={{ animationDelay: '200ms' }} />
+      <div className="results-actions res-rise" style={{ animationDelay: '240ms' }}>
+        <button className="restart-btn" onClick={() => dispatch({ type: 'RESTART' })}>
+          ↺ Start Over
+        </button>
+      </div>
+    </div>
   )
 }
