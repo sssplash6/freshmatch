@@ -1,9 +1,9 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const TIMEOUT_MS = 90_000; // 90s — generous for large prompts
 
-export async function chat(messages, { systemPrompt, max_tokens, response_format } = {}) {
+export async function chat(messages, { systemPrompt, max_tokens, response_format, model } = {}) {
   const body = {
-    model: process.env.OPENROUTER_MODEL,
+    model: model || process.env.OPENROUTER_MODEL,
     messages: [
       ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
       ...messages,

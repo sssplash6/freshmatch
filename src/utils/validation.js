@@ -24,8 +24,13 @@ export const MIN_ESSAY_CHARS  = 80  // below this we treat the essay as skipped
 // from obvious junk before they submit. Mirrors looksMashed in server/routes/narrate.js.
 export const looksMashed = v => /([a-z])\1\1/i.test(v || '')
 
-export const isValidHonorTitle = v => hasSubstance(v, MIN_HONOR_CHARS) && !looksMashed(v)
-export const isSubstantiveEc    = v => hasSubstance(v, MIN_EC_CHARS) && !looksMashed(v)
+// Whole-entry placeholder / "I have nothing" text — grammatical but contentless
+// ("I dont have anything", "none", "n/a"). Mirrors isNoContentText in server/routes/narrate.js.
+const NO_CONTENT_RE = /^(i\s*(do\s*n'?t|don'?t|dont)\s*(have|got)\s*(any(thing)?|much|stuff)?|i\s*have\s*(nothing|none|no\b.*)|nothing|none|no\s+(activit|honou?r|award|idea)\w*|n\.?\s*\/?\s*a\.?|na|idk|i\s*don'?t\s*know|nope?|nil|null|empty|-+|\.+)\.?$/i
+export const isNoContentText = v => NO_CONTENT_RE.test((v || '').trim())
+
+export const isValidHonorTitle = v => hasSubstance(v, MIN_HONOR_CHARS) && !looksMashed(v) && !isNoContentText(v)
+export const isSubstantiveEc    = v => hasSubstance(v, MIN_EC_CHARS) && !looksMashed(v) && !isNoContentText(v)
 export const isValidSchoolName  = v => hasSubstance(v, MIN_SCHOOL_CHARS)
 export const isRealEssay        = v => (v || '').trim().length >= MIN_ESSAY_CHARS
 
