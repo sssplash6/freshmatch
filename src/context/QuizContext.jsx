@@ -20,6 +20,7 @@ export const initialState = {
   efc: null,
   consentData: false,    // required — generate results
   consentOffers: false,  // optional — curated offers
+  verifyToken: '',       // signed proof the email was verified (gates results)
   direction: 'forward',
 }
 
@@ -60,11 +61,19 @@ export function quizReducer(state, action) {
         if (state.currentIndex < buildSection1(state.essay).length - 1) {
           return { ...state, currentIndex: state.currentIndex + 1, direction: 'forward' }
         }
-        return { ...state, phase: 'results', direction: 'forward' }
+        // Email verification gates the results — collect + verify before the
+        // (paid) narrate call rather than at intake, so students reach it only
+        // after investing in the quiz.
+        return { ...state, phase: 'verify', direction: 'forward' }
       }
       return state
     }
     case 'BACK': {
+      if (state.phase === 'verify') {
+        // Back from the verification gate returns to the last section1 question
+        // (EFC), where currentIndex was left when the section completed.
+        return { ...state, phase: 'section1', direction: 'back' }
+      }
       if (state.phase === 'intake') {
         if (state.currentIndex === 0) {
           return { ...state, phase: 'landing', direction: 'back' }
@@ -115,6 +124,12 @@ export function quizReducer(state, action) {
       return { ...state, efc: action.value }
     case 'SET_CONSENT':
       return { ...state, [action.field]: action.value }
+    case 'VERIFIED':
+      // Email verified — store the signed token and unlock the results.
+      return { ...state, verifyToken: action.token, phase: 'results', direction: 'forward' }
+    case 'NEED_VERIFY':
+      // narrate rejected the token (e.g. expired) — send the user back to verify.
+      return { ...state, verifyToken: '', phase: 'verify', direction: 'back' }
     case 'EDIT':
       // Return from results to the portfolio questions so the student can fix
       // gibberish/insufficient input and resubmit.

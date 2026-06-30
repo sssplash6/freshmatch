@@ -606,7 +606,7 @@ export function ResultsView({ name, personalityType, schools = [], dreamResults 
 
 export default function Results() {
   const { state, dispatch } = useQuiz()
-  const { name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers } = state
+  const { name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers, verifyToken } = state
 
   const [status, setStatus]         = useState('loading')
   const [schools, setSchools]       = useState([])
@@ -636,9 +636,15 @@ export default function Results() {
           // Send the complete quiz state so the full submission can be stored.
           // email/schoolName/section1Answers aren't used for matching, but are
           // captured for the saved record.
-          body: JSON.stringify({ name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers }),
+          body: JSON.stringify({ name, email, country, schoolName, grade, section1Answers, testScores, extracurriculars, honors, essay, personality: personalityAnswers, majors, dreamSchools, efc, consentData, consentOffers, verifyToken }),
         })
         const data = await res.json()
+        // Verification token missing/expired — bounce back to the verify step
+        // so the student can re-request a code, rather than show a dead error.
+        if (res.status === 401 && data.needVerification) {
+          if (!cancelled) dispatch({ type: 'NEED_VERIFY' })
+          return
+        }
         // The profile was judged gibberish / too sparse to assess — show a
         // dedicated "not enough info" screen instead of a generic error.
         if (res.status === 422 && data.insufficient) {

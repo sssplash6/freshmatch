@@ -24,3 +24,12 @@ services:
       # Token guarding GET /api/submissions. Endpoint is disabled when unset.
       - key: ADMIN_TOKEN
         sync: false
+      # Email verification. RESEND_API_KEY sends the 6-digit codes; without it
+      # codes are only logged (dev). VERIFY_FROM must be a Resend-verified sender.
+      # VERIFY_SECRET keeps verified-email tokens valid across restarts.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: VERIFY_FROM
+        sync: false
+      - key: VERIFY_SECRET
+        sync: false

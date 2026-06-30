@@ -4,6 +4,7 @@ import { dirname, join } from 'path'
 import { Router } from 'express'
 import { chat } from '../_openrouter.js'
 import { saveSubmission } from '../db.js'
+import { verifyToken } from '../verify.js'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
 const DATA = join(__dir, '../data')
@@ -431,6 +432,14 @@ router.post('/', async (req, res) => {
     // Data-processing consent is mandatory to run the calculation.
     if (req.body.consentData !== true) {
       return res.status(400).json({ error: 'Consent is required to generate results' })
+    }
+
+    // The email must have been verified via /api/verify before results are
+    // generated. The signed token is bound to the email, so this can't be
+    // bypassed by POSTing narrate directly. (401 → the client sends the user
+    // back to the verification step.)
+    if (!verifyToken(req.body.verifyToken, req.body.email)) {
+      return res.status(401).json({ error: 'Please verify your email to see your results.', needVerification: true })
     }
 
     // Nothing real to assess (no usable scores, no honors, every activity blank or

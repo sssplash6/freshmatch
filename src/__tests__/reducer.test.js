@@ -37,10 +37,28 @@ describe('quizReducer', () => {
       expect(state.direction).toBe('forward')
     })
 
-    it('transitions to results after last section1 question', () => {
+    it('transitions to the email-verify gate after last section1 question', () => {
       const s = { ...section1State, currentIndex: lastSection1Index }
       const state = quizReducer(s, { type: 'NEXT' })
+      expect(state.phase).toBe('verify')
+    })
+  })
+
+  describe('VERIFIED', () => {
+    it('stores the token and unlocks results', () => {
+      const s = { ...initialState, phase: 'verify' }
+      const state = quizReducer(s, { type: 'VERIFIED', token: 'abc.def' })
       expect(state.phase).toBe('results')
+      expect(state.verifyToken).toBe('abc.def')
+    })
+  })
+
+  describe('NEED_VERIFY', () => {
+    it('clears the token and returns to the verify gate', () => {
+      const s = { ...initialState, phase: 'results', verifyToken: 'stale' }
+      const state = quizReducer(s, { type: 'NEED_VERIFY' })
+      expect(state.phase).toBe('verify')
+      expect(state.verifyToken).toBe('')
     })
   })
 

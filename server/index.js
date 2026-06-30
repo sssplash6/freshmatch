@@ -6,6 +6,7 @@ import { readFileSync } from 'fs';
 import narrateRouter from './routes/narrate.js';
 import submissionsRouter from './routes/submissions.js';
 import shareRouter from './routes/share.js';
+import verifyRouter from './routes/verify.js';
 import { getSubmissionByToken } from './db.js';
 import { injectShareMeta, shareCopy } from './shareMeta.js';
 import { rateLimit } from './rateLimit.js';
@@ -47,9 +48,19 @@ const adminLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 60 });
 // opening a few shared links while making bulk token-guessing pointless.
 const shareLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 120 });
 
+// Per-IP cap on the email-verification endpoints. The real anti-abuse defense is
+// per-email (cooldown + a hard cap on codes per address, in verify.js), which is
+// IP-independent — so this cap is deliberately generous to avoid locking out the
+// many real users who share a single egress IP behind carrier-grade NAT (the
+// expected situation for our Uzbekistan cohort). Each user makes only a handful
+// of calls (send + verify, maybe a resend/retry), so 100 / 10 min still leaves
+// room for ~20 fresh users per shared IP per window while blocking floods.
+const verifyLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 100 });
+
 app.use('/api/narrate', narrateLimiter, narrateRouter);
 app.use('/api/submissions', adminLimiter, submissionsRouter);
 app.use('/api/r', shareLimiter, shareRouter);
+app.use('/api/verify', verifyLimiter, verifyRouter);
 
 // Personalized share page. Crawlers (no JS) read these injected OG/Twitter tags
 // for the link unfurl; real visitors get the same HTML and the SPA renders the

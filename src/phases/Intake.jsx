@@ -8,7 +8,7 @@ const GRADES = ['9th Grade', '10th Grade', '11th Grade', '12th Grade', 'Gap Year
 
 export default function Intake() {
   const { state, dispatch } = useQuiz()
-  const { name, email, country, schoolName, grade } = state
+  const { name, country, schoolName, grade } = state
   const [step, setStep] = useState(0)
   const nameRef = useRef(null)
   const schoolRef = useRef(null)
@@ -18,7 +18,7 @@ export default function Intake() {
     else schoolRef.current?.focus()
   }, [step])
 
-  const canContinueStep0 = name.trim().length > 0 && email.trim().length > 0 && email.includes('@')
+  const canContinueStep0 = name.trim().length > 0
   const canContinueStep1 = country.trim().length > 0 && isValidSchoolName(schoolName) && grade !== ''
 
   function handleKeyDown0(e) {
@@ -33,7 +33,7 @@ export default function Intake() {
     return (
       <div className="card">
         <div className="question-slide slide-forward">
-          <div className="question-text intake-question">Personal information</div>
+          <div className="question-text intake-question">What's your name?</div>
 
           <div className="intake-fields">
             <div className="intake-field-item">
@@ -45,19 +45,6 @@ export default function Intake() {
                 placeholder="Your name"
                 value={name}
                 onChange={e => dispatch({ type: 'SET_NAME', value: e.target.value })}
-                onKeyDown={handleKeyDown0}
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="intake-field-item">
-              <label className="intake-label">Email address</label>
-              <input
-                className="intake-input"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={e => dispatch({ type: 'SET_EMAIL', value: e.target.value })}
                 onKeyDown={handleKeyDown0}
                 autoComplete="off"
               />

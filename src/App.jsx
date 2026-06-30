@@ -3,6 +3,7 @@ import { QuizProvider, useQuiz } from './context/QuizContext'
 import Landing from './phases/Landing'
 import Intake from './phases/Intake'
 import Section1 from './phases/Section1'
+import EmailVerify from './phases/EmailVerify'
 import Results from './phases/Results'
 import SharedResults from './phases/SharedResults'
 import Admin from './admin/Admin'
@@ -12,6 +13,7 @@ function Quiz() {
   switch (state.phase) {
     case 'landing': return <Landing />
     case 'intake':  return <Intake />
+    case 'verify':  return <EmailVerify />
     case 'results': return <Results />
     default:        return <Section1 />
   }
