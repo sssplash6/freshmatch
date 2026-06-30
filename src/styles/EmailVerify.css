@@ -2,11 +2,13 @@
    layers on the verification-specific bits (sub-copy, code field, resend row). */
 
 .verify-sub {
+  /* Match the heading's 32px horizontal padding so both share a left edge. */
+  padding: 0 32px;
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--faint);
-  margin: 10px 0 20px;
+  margin: 12px 0 20px;
   max-width: 42ch;
 }
 
