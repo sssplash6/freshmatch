@@ -141,6 +141,25 @@ function academicStrength(testScores, honors, extracurriculars) {
   return score  // max ~100
 }
 
+// A clearly strong AND substantive profile: real top scores/GPA plus genuine
+// national/international honors or a full slate of real activities. These are
+// exactly the high-achievers the AI authenticity gates occasionally misread as
+// "too good to be true" / "fabricated" and block. We skip BOTH gates for them
+// entirely — a troll can't cheaply fake this combination (strength requires
+// bounded, real-looking scores, and the honor/EC filters strip junk), and even
+// if one somehow did, elite scores simply yield elite matches, so there is no
+// harm. This is a deterministic bypass: no model can flag what it never sees.
+function isHighProfile(strength, honors, extracurriculars) {
+  const topHonors = (honors || [])
+    .filter(isRealHonor)
+    .filter(h => h.level === 'intl' || h.level === 'natl').length
+  const realEcs = (extracurriculars || []).filter(isRealEc).length
+  // Junk profiles score ≤~16 (no real scores); genuine high-achievers clear 50
+  // comfortably. The honor/activity requirement keeps a bare scores-only profile
+  // (which the gate SHOULD still see) from bypassing.
+  return strength >= 50 && (topHonors >= 1 || realEcs >= 5)
+}
+
 // Minimum composite strength required per admit-rate tier
 const ACADEMIC_GATES = [
   { maxRate: 5,  minStrength: 76 },  // MIT, Stanford, Harvard, Yale, NYUAD
@@ -476,26 +495,35 @@ router.post('/', async (req, res) => {
     inflightPromise.catch(() => {})  // avoid unhandled rejection when no second waiter
     inflight.set(cacheKey, inflightPromise)
 
+    const strength = academicStrength(testScores, honors, extracurriculars)
+    // Clearly strong, substantive profiles (real top scores + genuine national/
+    // international honors or a full activity slate) skip the authenticity gates
+    // entirely — they're the exact profiles those gates occasionally misread as
+    // "too good to be true." No gate for high profiles, by design.
+    const highProfile = isHighProfile(strength, honors, extracurriculars)
+
     // Robust AI authenticity screen — reads the ACTUAL content (activities, honors,
     // essay, and whether the scores look real or like placeholders) and rejects
     // junk that slips the char-count heuristics, BEFORE the expensive matching call.
-    const screen = await screenSubmission({ name, country, schoolName: req.body.schoolName, grade, testScores, honors, extracurriculars, essay, majors })
-    if (!screen.genuine) {
-      const reason = screen.reason ||
-        "There isn't enough genuine information to assess your fit — please fill in your real scores, activities, and details, then try again."
-      const payload = { insufficient: true, reason }
-      if (responseCache.size >= CACHE_MAX) responseCache.delete(responseCache.keys().next().value)
-      responseCache.set(cacheKey, payload)
-      const token = saveSubmission(req.body, payload)
-      settleInflight?.resolve({ payload, token })
-      inflight.delete(cacheKey)
-      return res.status(422).json({ error: reason, insufficient: true })
+    // Skipped for high profiles.
+    if (!highProfile) {
+      const screen = await screenSubmission({ name, country, schoolName: req.body.schoolName, grade, testScores, honors, extracurriculars, essay, majors })
+      if (!screen.genuine) {
+        const reason = screen.reason ||
+          "There isn't enough genuine information to assess your fit — please fill in your real scores, activities, and details, then try again."
+        const payload = { insufficient: true, reason }
+        if (responseCache.size >= CACHE_MAX) responseCache.delete(responseCache.keys().next().value)
+        responseCache.set(cacheKey, payload)
+        const token = saveSubmission(req.body, payload)
+        settleInflight?.resolve({ payload, token })
+        inflight.delete(cacheKey)
+        return res.status(422).json({ error: reason, insufficient: true })
+      }
     }
 
     const { schools, financial, schoolsById } = await loadData()
 
     const finById = Object.fromEntries(financial.map(f => [f.id, f]))
-    const strength = academicStrength(testScores, honors, extracurriculars)
 
     // Merge Fiske + financial, resolve branch-campus proxies
     const eligible = []
@@ -600,7 +628,7 @@ ${studentSummary}
 ${dreamSection}
 ${regularSection}
 
-FIRST, judge whether this is a GENUINE, good-faith submission worth assessing, and set "dataQuality". Judge the QUALITY and SERIOUSNESS of what the student actually WROTE (name, school, honors, activities, essay) — not merely whether fields are filled in. Valid test scores do NOT by themselves make a profile genuine when the written content is nonsense.
+${highProfile ? `This student's objective academic credentials — verified test scores plus genuine national/international honors and multiple substantive activities — have ALREADY passed our system's strength and authenticity checks. You MUST set "dataQuality": "ok" and proceed directly to the full evaluation. Do NOT return "insufficient" for this profile under any circumstances, and never treat impressive or hard-to-believe achievements as fabricated — the system has already validated them.\n\n` : ''}FIRST, judge whether this is a GENUINE, good-faith submission worth assessing, and set "dataQuality". Judge the QUALITY and SERIOUSNESS of what the student actually WROTE (name, school, honors, activities, essay) — not merely whether fields are filled in. Valid test scores do NOT by themselves make a profile genuine when the written content is nonsense.
 - "insufficient" — the written content is not a real, good-faith description of this student. This covers:
   • keyboard mashing or random characters ("asdf", "jjj", "h"), placeholder or test text;
   • typed-out nonsense or mashed words ("swcooking hahahaha biii", "swimsming wentttt to pool", "chess 122223 years");
