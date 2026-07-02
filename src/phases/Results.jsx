@@ -390,7 +390,17 @@ function ShareButton({ token }) {
   }
 
   async function onShare() {
-    if (typeof navigator !== 'undefined' && navigator.share) {
+    // Native share is reliable only on touch/mobile. On desktop navigator.share
+    // often exists but rejects with AbortError WITHOUT ever showing a sheet (or
+    // resolves silently) — the old code then returned and the click did nothing.
+    // So gate native share to coarse-pointer devices; desktop always copies,
+    // which is dependable and always gives visible feedback.
+    const canNativeShare =
+      typeof navigator !== 'undefined' &&
+      typeof navigator.share === 'function' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(pointer: coarse)')?.matches
+    if (canNativeShare) {
       try {
         await navigator.share({ title: 'My FreshMatch college matches', text: 'I just got my college matches — find yours in 5 min 👇', url })
         return
