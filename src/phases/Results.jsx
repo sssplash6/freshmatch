@@ -157,7 +157,44 @@ function SchoolTile({ school, index, onExpand, invisible }) {
   )
 }
 
-function ExpandedSchool({ school, index, total, isDream, onClose, onNav, navDirRef }) {
+// Per-college PDF report — live quiz only (shared /r/:token pages have no
+// profile to generate from, so `onGenerateReport` arrives null there and the
+// block never renders). Generation takes a real ~20–45s: the status line keeps
+// the modal honest about it, and a finished report becomes a plain link so
+// popup blockers never eat the PDF.
+function ReportCta({ school, report, onGenerateReport }) {
+  if (!onGenerateReport) return null
+  return (
+    <div className="report-cta">
+      {!report && (
+        <>
+          <button className="report-btn" onClick={() => onGenerateReport(school)}>
+            Get the full report (PDF)
+          </button>
+          <p className="report-hint">
+            Where you stand vs admitted students, what to do about it, and how each move changes your modeled chance.
+          </p>
+        </>
+      )}
+      {report?.status === 'loading' && (
+        <p className="report-status">Building your {school.name} report — usually 20–45 seconds…</p>
+      )}
+      {report?.status === 'ready' && (
+        <a className="report-btn report-btn--ready" href={report.url} target="_blank" rel="noopener noreferrer">
+          ↗ Open your report (PDF)
+        </a>
+      )}
+      {report?.status === 'error' && (
+        <>
+          <p className="report-error">{report.error}</p>
+          <button className="report-btn" onClick={() => onGenerateReport(school)}>Try again</button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function ExpandedSchool({ school, index, total, isDream, onClose, onNav, navDirRef, reportState, onGenerateReport }) {
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') onClose()
@@ -233,6 +270,12 @@ function ExpandedSchool({ school, index, total, isDream, onClose, onNav, navDirR
                     ))}
                   </div>
                 )}
+
+                <ReportCta
+                  school={school}
+                  report={reportState?.[school.id]}
+                  onGenerateReport={onGenerateReport}
+                />
               </motion.div>
             </AnimatePresence>
           </div>
@@ -435,7 +478,7 @@ function maxColsForViewport() {
 // identically for the live quiz and for a read-only shared link (/r/:token).
 // `actions` is the slot under the results for the buttons that differ by context
 // (Share + Start Over when live; "Take the quiz yourself" on a shared view).
-export function ResultsView({ name, personalityType, schools = [], dreamResults = [], recommendation, actions, titleAction }) {
+export function ResultsView({ name, personalityType, schools = [], dreamResults = [], recommendation, actions, titleAction, reportState, onGenerateReport }) {
   const [expandedIndex, setExpandedIndex] = useState(null)
   const [maxCols, setMaxCols] = useState(maxColsForViewport)
   const navDirRef = useRef(0)
@@ -607,6 +650,8 @@ export function ResultsView({ name, personalityType, schools = [], dreamResults 
             onClose={handleClose}
             onNav={handleNav}
             navDirRef={navDirRef}
+            reportState={reportState}
+            onGenerateReport={onGenerateReport}
           />
         )}
       </AnimatePresence>
@@ -625,6 +670,32 @@ export default function Results() {
   const [recommendation, setRecommendation] = useState(null)
   const [shareToken, setShareToken] = useState(null)
   const [errorMsg, setErrorMsg]     = useState('')
+  const [reports, setReports]       = useState({})  // collegeId → { status, url?, error? }
+
+  // Per-college PDF report. The server is idempotent on (profile, college,
+  // engine version) — a re-click after success or a repeat for the same school
+  // is a ~3ms cache hit, so no client-side guard beyond the loading state.
+  const generateReport = useCallback(async (school) => {
+    const id = school.id
+    setReports(r => ({ ...r, [id]: { status: 'loading' } }))
+    try {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, email, country, grade, testScores, extracurriculars, honors, essay, majors, efc,
+          consentData, verifyToken,
+          collegeId: id,
+          fitScore: school.fitScore,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}`)
+      setReports(r => ({ ...r, [id]: { status: 'ready', url: data.pdfUrl } }))
+    } catch (err) {
+      setReports(r => ({ ...r, [id]: { status: 'error', error: err.message } }))
+    }
+  }, [name, email, country, grade, testScores, extracurriculars, honors, essay, majors, efc, consentData, verifyToken])
 
   useEffect(() => {
     let cancelled = false
@@ -708,6 +779,8 @@ export default function Results() {
         dreamResults={dreamResults}
         recommendation={recommendation || getRecommendation(testScores, honors, extracurriculars)}
         titleAction={shareToken && <ShareButton token={shareToken} />}
+        reportState={reports}
+        onGenerateReport={generateReport}
         actions={
           <button className="restart-btn" onClick={() => dispatch({ type: 'RESTART' })}>
             ↺ Start Over
