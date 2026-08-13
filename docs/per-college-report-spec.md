@@ -4,6 +4,15 @@
 
 Version 0.1 · 2026-08-10 · Freshman Academy / FreshMatch
 
+> **Implementation status (2026-08-13, engine `pcr-1.0.0`): phases 0–5 are built and live in this repo.**
+> Admissions dataset `server/data/schools-admissions.json` (158 schools, seeded — top-60 QA still owed);
+> gap vector `server/report/gapVector.js`; improvement engine `server/report/{rules,simulate,plan}.js`;
+> composer with deterministic fallback `server/report/compose.js`; PDF `server/report/pdf.js`;
+> API + storage + quotas `server/routes/report.js`; per-college CTA in the results modal.
+> One honesty deviation from §7: actions the strength composite does not score (EC depth, rigor,
+> strategy) are marked `modeled: false` and carry **no invented Δchance** — the report says so plainly.
+> Phase 6 (multi-tenancy, white-label config, metering) remains unbuilt, as scoped below.
+
 > **How to use this document.** Sections 1–3 are the pitch (what it is, why it matters, why we win).
 > Sections 4–10 are the engineering spec. Section 11 is the delivery plan. Section 12 maps the spec
 > onto email talking points. Anything marked **[VERIFY]** is a number to confirm before it goes into

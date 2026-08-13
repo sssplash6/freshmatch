@@ -19,6 +19,9 @@ services:
       - key: OPENROUTER_MODEL
         value: anthropic/claude-sonnet-4.6
       # SQLite file on the mounted disk. Submissions are stored when this is set.
+      # Per-College Report PDFs cache themselves next to it at /var/data/reports
+      # (REPORTS_DIR overrides; REPORTS_MAX_BYTES caps the cache, default 500MB
+      # with LRU eviction — sized to leave the database room on the 1GB disk).
       - key: DATABASE_PATH
         value: /var/data/submissions.sqlite
       # Token guarding GET /api/submissions. Endpoint is disabled when unset.
