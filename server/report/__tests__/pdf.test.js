@@ -16,6 +16,7 @@ const profile = {
     { description: 'School debate team member for 3 years' },
     { description: 'Photography club, organized the annual school exhibition' },
     { description: 'Member of the national chess federation, competed in regional tournaments' },
+    { description: 'Part-time helper in my family\'s small business on weekends' },
   ],
   majors: ['Computer Science'], efc: 20000,
 }
