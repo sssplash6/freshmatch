@@ -61,7 +61,7 @@ export const RULES = [
       return {
         title: `Clear the hard SAT requirement: ${required}`,
         actionSkeleton: `${gv.collegeName} enforces a firm SAT minimum of ${required} for applicants like you${current ? ` — you are at ${current}, ${required - current} points short` : ' — no score is on file'}. Until that bar is cleared, nothing else in the application is evaluated. Structured prep targeting ${required}+ is the gating action for this school.`,
-        rationale: `Hard institutional requirement: SAT ≥ ${required}.`,
+        rationale: `Hard institutional requirement: SAT minimum ${required}.`,
         mutations: current ? [{ type: 'sat', value: required }] : null,
         clearsGate: true,
         effortWeeks: 8,
@@ -81,7 +81,7 @@ export const RULES = [
       const t = dim(gv, 'testing')
       const target = t.benchmark.p50
       return {
-        title: `Retake the SAT, target ≥ ${target}`,
+        title: `Retake the SAT, target ${target}+`,
         actionSkeleton: `Your ${t.studentValue} sits ${-t.delta} points below the 25th percentile of admitted students (${t.benchmark.p25}) — the band where a score stops being neutral and starts costing you. A retake targeting the admitted median of ${target} is the single most direct move available.`,
         rationale: t.evidence,
         mutations: [{ type: 'sat', value: target }],

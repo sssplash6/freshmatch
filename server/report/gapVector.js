@@ -212,7 +212,7 @@ export function buildGapVector(profile, { school, fin, admissions }, { fitScore 
       studentValue: Math.round(gpaNorm * 100) / 100,
       benchmark: { mean: expected, source: benchmark != null ? 'published' : 'tier-expectation' },
       delta: Math.round(diff * 100) / 100, percentile: null,
-      evidence: `GPA ${testScores.gpa}/${testScores.gpaScale || 4} (≈${(Math.round(gpaNorm * 100) / 100).toFixed(2)}/4) vs ${benchmark != null ? 'admitted average' : 'typical admitted profile'} of ${expected.toFixed(2)}`,
+      evidence: `GPA ${testScores.gpa}/${testScores.gpaScale || 4} (~${(Math.round(gpaNorm * 100) / 100).toFixed(2)}/4) vs ${benchmark != null ? 'admitted average' : 'typical admitted profile'} of ${expected.toFixed(2)}`,
       // Seniors have no terms left to move a GPA; younger students do.
       leverage: /9th|10th|11th/i.test(grade) ? 'medium' : 'low',
     })
