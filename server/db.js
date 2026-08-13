@@ -35,6 +35,25 @@ const SCHEMA = `
   );
   CREATE INDEX IF NOT EXISTS submissions_created_at_idx ON submissions (created_at DESC);
   CREATE INDEX IF NOT EXISTS submissions_email_idx ON submissions (email);
+
+  -- Per-College Report generations. The PDF + JSON payload live on disk keyed
+  -- by report_key (sha256 of profile + college + engine version — also the
+  -- idempotency cache key); this table is the analytics/admin trail.
+  CREATE TABLE IF NOT EXISTS reports (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+    report_key        TEXT NOT NULL UNIQUE,
+    college_id        TEXT NOT NULL,
+    engine_version    TEXT NOT NULL,
+    email             TEXT,
+    chance_before     INTEGER,
+    chance_ceiling    INTEGER,     -- Maximum scenario
+    improvement_count INTEGER,
+    prose_source      TEXT,        -- model | fallback
+    pdf_bytes         INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS reports_created_at_idx ON reports (created_at DESC);
+  CREATE INDEX IF NOT EXISTS reports_college_idx ON reports (college_id);
 `
 
 const dbPath = process.env.DATABASE_PATH
@@ -42,6 +61,7 @@ const dbPath = process.env.DATABASE_PATH
 let db = null
 let insert = null
 let selectByToken = null
+let insertReport = null
 if (dbPath) {
   mkdirSync(dirname(dbPath), { recursive: true })
   db = new Database(dbPath)
@@ -62,6 +82,12 @@ if (dbPath) {
       (@name, @email, @country, @school_name, @grade, @sat, @gpa, @efc, @majors, @dream_schools, @personality_type, @result_count, @consent_data, @consent_offers, @share_token, @input, @output)
   `)
   selectByToken = db.prepare('SELECT name, output FROM submissions WHERE share_token = ?')
+  insertReport = db.prepare(`
+    INSERT OR IGNORE INTO reports
+      (report_key, college_id, engine_version, email, chance_before, chance_ceiling, improvement_count, prose_source, pdf_bytes)
+    VALUES
+      (@report_key, @college_id, @engine_version, @email, @chance_before, @chance_ceiling, @improvement_count, @prose_source, @pdf_bytes)
+  `)
   console.log(`[db] storing submissions at ${dbPath}`)
 }
 
@@ -120,6 +146,29 @@ export function getSubmissionByToken(token) {
   return {
     name: (row.name || '').trim().split(/\s+/)[0] || '',  // first name only
     output,
+  }
+}
+
+// Record one report generation for the admin/analytics trail. Same contract as
+// saveSubmission: silent no-op without a DB, and a failure never breaks the
+// user's request. INSERT OR IGNORE — a cache-rebuild of an existing key is not
+// an error.
+export function saveReport(meta) {
+  if (!insertReport) return
+  try {
+    insertReport.run({
+      report_key: meta.reportKey,
+      college_id: meta.collegeId,
+      engine_version: meta.engineVersion,
+      email: meta.email || null,
+      chance_before: Number.isFinite(meta.chanceBefore) ? meta.chanceBefore : null,
+      chance_ceiling: Number.isFinite(meta.chanceCeiling) ? meta.chanceCeiling : null,
+      improvement_count: Number.isFinite(meta.improvementCount) ? meta.improvementCount : null,
+      prose_source: meta.proseSource || null,
+      pdf_bytes: Number.isFinite(meta.pdfBytes) ? meta.pdfBytes : null,
+    })
+  } catch (err) {
+    console.error('[db] saveReport failed:', err.message)
   }
 }
 

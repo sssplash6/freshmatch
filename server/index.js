@@ -7,6 +7,7 @@ import narrateRouter from './routes/narrate.js';
 import submissionsRouter from './routes/submissions.js';
 import shareRouter from './routes/share.js';
 import verifyRouter from './routes/verify.js';
+import reportRouter from './routes/report.js';
 import { getSubmissionByToken } from './db.js';
 import { injectShareMeta, shareCopy } from './shareMeta.js';
 import { rateLimit } from './rateLimit.js';
@@ -61,6 +62,10 @@ app.use('/api/narrate', narrateLimiter, narrateRouter);
 app.use('/api/submissions', adminLimiter, submissionsRouter);
 app.use('/api/r', shareLimiter, shareRouter);
 app.use('/api/verify', verifyLimiter, verifyRouter);
+// Per-College Report endpoints. Generation cost is limited inside the router
+// with a per-college quota (12 fresh reports / 30 min / IP — a batch of 8
+// consumes 8; cached re-fetches are free), so no blanket limiter here.
+app.use('/api', reportRouter);
 
 // Personalized share page. Crawlers (no JS) read these injected OG/Twitter tags
 // for the link unfurl; real visitors get the same HTML and the SPA renders the
