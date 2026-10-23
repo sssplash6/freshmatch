@@ -45,7 +45,7 @@ export default function Stats() {
         )}
         <p className="results-desc">
           {since ? `Every assessment since ${since}, ` : 'Every assessment, '}
-          counted straight from the production database. Counts only: no names, emails or schools.
+          counted straight from the production database.
         </p>
       </div>
 
