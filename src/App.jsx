@@ -7,6 +7,7 @@ import EmailVerify from './phases/EmailVerify'
 import Results from './phases/Results'
 import SharedResults from './phases/SharedResults'
 import Admin from './admin/Admin'
+import Stats from './phases/Stats'
 
 function Quiz() {
   const { state } = useQuiz()
@@ -43,7 +44,7 @@ function ThemeToggle() {
 }
 
 export default function App() {
-  // /admin (scouting dashboard) and /r/:token (shared results) are separate
+  // /admin (scouting dashboard), /stats (live totals) and /r/:token (shared results) are separate
   // surfaces from the quiz. The SPA fallback serves index.html for both, so we
   // branch on the path here rather than pulling in a router.
   const path = typeof window !== 'undefined'
@@ -55,6 +56,8 @@ export default function App() {
   let surface
   if (isAdmin) {
     surface = <Admin />
+  } else if (path === '/stats') {
+    surface = <Stats />
   } else if (shareMatch) {
     surface = <SharedResults token={shareMatch[1]} />
   } else {

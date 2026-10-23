@@ -8,7 +8,7 @@ import submissionsRouter from './routes/submissions.js';
 import shareRouter from './routes/share.js';
 import verifyRouter from './routes/verify.js';
 import reportRouter from './routes/report.js';
-import { getSubmissionByToken } from './db.js';
+import { getSubmissionByToken, getStats } from './db.js';
 import { injectShareMeta, shareCopy } from './shareMeta.js';
 import { rateLimit } from './rateLimit.js';
 
@@ -62,6 +62,12 @@ app.use('/api/narrate', narrateLimiter, narrateRouter);
 app.use('/api/submissions', adminLimiter, submissionsRouter);
 app.use('/api/r', shareLimiter, shareRouter);
 app.use('/api/verify', verifyLimiter, verifyRouter);
+// Public totals for /stats, polled by the page. Aggregates only (see getStats).
+app.get('/api/stats', shareLimiter, (req, res) => {
+  const stats = getStats();
+  if (!stats) return res.status(503).json({ error: 'No database configured.' });
+  res.json(stats);
+});
 // Per-College Report endpoints. Generation cost is limited inside the router
 // with a per-college quota (12 fresh reports / 30 min / IP — a batch of 8
 // consumes 8; cached re-fetches are free), so no blanket limiter here.

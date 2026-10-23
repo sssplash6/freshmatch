@@ -196,3 +196,23 @@ export function getSubmission(id) {
     output: safeParse(row.output),
   }
 }
+
+// Totals for the public /stats page. Counts only: no row, name, email or school
+// ever leaves this function, and only the top countries are named. Returns null
+// when no DB is configured.
+export function getStats() {
+  if (!db) return null
+  const get = sql => db.prepare(sql).get()
+  return {
+    ...get(`SELECT COUNT(*) AS assessments, COUNT(DISTINCT lower(email)) AS students,
+              COUNT(DISTINCT country) AS countries, MIN(created_at) AS since,
+              COALESCE(SUM(created_at >= datetime('now', '-7 days')), 0) AS lastWeek
+            FROM submissions`),
+    ...get(`SELECT COUNT(*) AS returners FROM (SELECT 1 FROM submissions
+              WHERE email IS NOT NULL GROUP BY lower(email) HAVING COUNT(*) > 1)`),
+    ...get('SELECT COUNT(*) AS reports, COUNT(DISTINCT college_id) AS colleges FROM reports'),
+    topCountries: db.prepare(`SELECT country, COUNT(*) AS n FROM submissions
+              WHERE country IS NOT NULL AND country != ''
+              GROUP BY country ORDER BY n DESC, country LIMIT 5`).all(),
+  }
+}
