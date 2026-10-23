@@ -23,7 +23,8 @@ describe('getStats', () => {
     expect(s).toMatchObject({
       assessments: 7, students: 6, countries: 2, returners: 1, lastWeek: 7, reports: 2, colleges: 1,
     })
-    expect(s.countryNames).toEqual(['Uzbekistan', 'Kazakhstan'])
+    // Kazakhstan counts as a country but has too few assessments to be named.
+    expect(s.countryNames).toEqual(['Uzbekistan'])
     expect(JSON.stringify(s)).not.toMatch(/Secret|@x\.com|spam/)
   })
 })
