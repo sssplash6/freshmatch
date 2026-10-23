@@ -30,15 +30,19 @@ export default function Stats() {
   const since = stats?.since
     ? sqlDate(stats.since).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     : null
-  const top = stats?.topCountries ?? []
-  const max = top[0]?.n || 1
-  const otherCountries = Math.max(0, (stats?.countries ?? 0) - top.length)
+  const names = stats?.countryNames ?? []
 
   return (
     <div className="results-page">
       <div className="results-header">
         <div className="results-eyebrow">FreshMatch · live</div>
-        <h1 className="results-title">Students using FreshMatch</h1>
+        {names.length > 0 ? (
+          <h1 className="results-title">
+            Used by students in <CountryCarousel names={names} />
+          </h1>
+        ) : (
+          <h1 className="results-title">Students using FreshMatch</h1>
+        )}
         <p className="results-desc">
           {since ? `Every assessment since ${since}, ` : 'Every assessment, '}
           counted straight from the production database. Counts only: no names, emails or schools.
@@ -60,22 +64,6 @@ export default function Stats() {
             <Tile n={stats.lastWeek} label="assessments in the last 7 days" />
           </div>
 
-          <h2 className="stats-heading">Assessments by country</h2>
-          <ul className="stats-bars">
-            {top.map(c => (
-              <li key={c.country}>
-                <span className="stats-bar-label">{c.country}</span>
-                <span className="stats-bar-track">
-                  <span className="stats-bar-fill" style={{ width: `${(c.n / max) * 100}%` }} />
-                </span>
-                <span className="stats-bar-n">{fmt(c.n)}</span>
-              </li>
-            ))}
-          </ul>
-          {otherCountries > 0 && (
-            <p className="results-desc">and {otherCountries} more {otherCountries === 1 ? 'country' : 'countries'}</p>
-          )}
-
           <p className="stats-updated">
             {failed ? 'Could not refresh, showing the last numbers.' : `Updated ${updated.toLocaleTimeString('en-GB')}`}
           </p>
@@ -84,9 +72,27 @@ export default function Stats() {
 
       <div className="results-divider" />
       <div className="results-actions">
-        <a className="share-btn" href="/">Find where you fit →</a>
+        <a className="share-btn" href="/">Try now →</a>
       </div>
     </div>
+  )
+}
+
+// One country at a time, most assessments first. Screen readers get the whole
+// list once instead of a name that changes every two seconds.
+function CountryCarousel({ names }) {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    if (names.length < 2) return
+    const timer = setInterval(() => setI(n => n + 1), 2200)
+    return () => clearInterval(timer)
+  }, [names.length])
+  return (
+    <>
+      {/* key remounts the span so its entry animation replays on every change */}
+      <span className="stats-country" key={i} aria-hidden="true">{names[i % names.length]}</span>
+      <span className="sr-only">{names.join(', ')}</span>
+    </>
   )
 }
 

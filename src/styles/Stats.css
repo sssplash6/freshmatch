@@ -32,58 +32,31 @@
   line-height: 1.4;
 }
 
-.stats-heading {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--orange);
-  font-weight: 400;
-  margin-bottom: 14px;
-}
-
-.stats-bars {
-  list-style: none;
-  display: grid;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.stats-bars li {
-  display: grid;
-  grid-template-columns: 9rem 1fr 3.5rem;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-}
-
-.stats-bar-label {
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stats-bar-track {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--selected-bg);
-  overflow: hidden;
-}
-
-.stats-bar-fill {
+/* The rotating country in the title, on its own line so the words before it
+   never reflow as names change length. */
+.stats-country {
   display: block;
-  height: 100%;
-  border-radius: 4px;
-  background: var(--orange);
-  transition: width 0.6s ease;
+  padding-bottom: 8px;
+  color: var(--orange);
+  animation: stats-country-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.stats-bar-n {
-  text-align: right;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
+@keyframes stats-country-in {
+  from { opacity: 0; transform: translateY(0.35em); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-country { animation: none; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .stats-updated {
@@ -96,5 +69,4 @@
 @media (max-width: 560px) {
   .stats-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats-tile-n { font-size: 26px; }
-  .stats-bars li { grid-template-columns: 6.5rem 1fr 2.5rem; }
 }

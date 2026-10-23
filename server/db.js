@@ -199,11 +199,10 @@ export function getSubmission(id) {
 }
 
 // Totals for the public /stats page. Counts only: no row, name, email or school
-// ever leaves this function. Country is whatever string the API was sent, so
-// only names on the picker's list count, and only those with a few assessments
-// are named. Returns null when no DB is configured.
+// ever leaves this function, and countries are named without their counts.
+// Country is whatever string the API was sent, so only names on the picker's
+// list count. Returns null when no DB is configured.
 const KNOWN_COUNTRIES = new Set(COUNTRIES)
-const MIN_NAMED = 3
 
 export function getStats() {
   if (!db) return null
@@ -220,6 +219,6 @@ export function getStats() {
               WHERE email IS NOT NULL GROUP BY lower(email) HAVING COUNT(*) > 1)`),
     ...get('SELECT COUNT(*) AS reports, COUNT(DISTINCT college_id) AS colleges FROM reports'),
     countries: countries.length,
-    topCountries: countries.filter(c => c.n >= MIN_NAMED).slice(0, 5),
+    countryNames: countries.map(c => c.country),   // most assessments first
   }
 }
