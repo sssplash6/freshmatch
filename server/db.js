@@ -10,6 +10,7 @@ import Database from 'better-sqlite3'
 import { mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { randomBytes } from 'crypto'
+import { COUNTRIES } from '../src/data/countries.js'
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS submissions (
@@ -198,21 +199,27 @@ export function getSubmission(id) {
 }
 
 // Totals for the public /stats page. Counts only: no row, name, email or school
-// ever leaves this function, and only the top countries are named. Returns null
-// when no DB is configured.
+// ever leaves this function. Country is whatever string the API was sent, so
+// only names on the picker's list count, and only those with a few assessments
+// are named. Returns null when no DB is configured.
+const KNOWN_COUNTRIES = new Set(COUNTRIES)
+const MIN_NAMED = 3
+
 export function getStats() {
   if (!db) return null
   const get = sql => db.prepare(sql).get()
+  const countries = db.prepare('SELECT country, COUNT(*) AS n FROM submissions GROUP BY country ORDER BY n DESC, country')
+    .all()
+    .filter(c => KNOWN_COUNTRIES.has(c.country))
   return {
     ...get(`SELECT COUNT(*) AS assessments, COUNT(DISTINCT lower(email)) AS students,
-              COUNT(DISTINCT country) AS countries, MIN(created_at) AS since,
+              MIN(created_at) AS since,
               COALESCE(SUM(created_at >= datetime('now', '-7 days')), 0) AS lastWeek
             FROM submissions`),
     ...get(`SELECT COUNT(*) AS returners FROM (SELECT 1 FROM submissions
               WHERE email IS NOT NULL GROUP BY lower(email) HAVING COUNT(*) > 1)`),
     ...get('SELECT COUNT(*) AS reports, COUNT(DISTINCT college_id) AS colleges FROM reports'),
-    topCountries: db.prepare(`SELECT country, COUNT(*) AS n FROM submissions
-              WHERE country IS NOT NULL AND country != ''
-              GROUP BY country ORDER BY n DESC, country LIMIT 5`).all(),
+    countries: countries.length,
+    topCountries: countries.filter(c => c.n >= MIN_NAMED).slice(0, 5),
   }
 }
