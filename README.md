@@ -1,6 +1,6 @@
 # FreshMatch
 
-![commits](https://img.shields.io/github/commit-activity/t/sssplash6/calc) · live at [freshmatch.net](https://freshmatch.net)
+![commits](https://img.shields.io/github/commit-activity/t/sssplash6/freshmatch) · live at [freshmatch.net](https://freshmatch.net)
 
 **The problem.** Students in Uzbekistan and the CIS come to Freshman Academy with two questions before anything else: is a US university realistic for me, and can my family afford it? An honest answer took a counselor's meeting, and generic chance calculators ignore what the family can pay.
 
