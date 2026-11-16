@@ -11,6 +11,7 @@ import { mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { randomBytes } from 'crypto'
 import { COUNTRIES } from '../src/data/countries.js'
+import { normalizedGpa } from './scoring.js'
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS submissions (
@@ -174,13 +175,20 @@ export function saveReport(meta) {
 }
 
 // Lightweight listing for the admin endpoint. Returns null when no DB is configured.
-const LIST_COLS = 'id, created_at, name, email, country, school_name, grade, sat, gpa, efc, majors, dream_schools, personality_type, result_count, consent_data, consent_offers'
+// IELTS and the GPA scale only live in the input JSON, so they are pulled out here.
+const LIST_COLS = `id, created_at, name, email, country, school_name, grade, sat, gpa, efc, majors, dream_schools, personality_type, result_count, consent_data, consent_offers,
+  json_extract(input, '$.testScores.ielts') AS ielts, json_extract(input, '$.testScores.gpaScale') AS gpa_scale`
 function safeParse(s) { try { return JSON.parse(s) } catch { return s } }
 
 export function listSubmissions(limit) {
   if (!db) return null
   const rows = db.prepare(`SELECT ${LIST_COLS} FROM submissions ORDER BY created_at DESC LIMIT ?`).all(limit)
-  return rows.map(r => ({ ...r, majors: safeParse(r.majors), dream_schools: safeParse(r.dream_schools) }))
+  return rows.map(r => ({
+    ...r,
+    majors: safeParse(r.majors),
+    dream_schools: safeParse(r.dream_schools),
+    gpa4: normalizedGpa({ gpa: r.gpa, gpaScale: r.gpa_scale }),   // comparable across /4, /5, /10, /100
+  }))
 }
 
 // Full single submission, including the complete input (extracurriculars,
