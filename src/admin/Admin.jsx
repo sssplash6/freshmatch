@@ -123,6 +123,7 @@ function DetailModal({ id, token, onClose }) {
   const input = sub?.input || {}
   const output = sub?.output || {}
   const ts = input.testScores || {}
+  const efc = efcLabel(sub?.efc ?? input.efc)
   const honors = (input.honors || []).filter(h => (h?.title || '').trim())
   const ecs = (input.extracurriculars || []).filter(e => (e?.description || '').trim())
   const matches = (output.schools || []).filter(s => s?.name)
@@ -151,6 +152,7 @@ function DetailModal({ id, token, onClose }) {
               {input.grade && <span>Grade {input.grade}</span>}
               {(input.schoolName || sub.school_name) && <span>{input.schoolName || sub.school_name}</span>}
               {sub.personality_type && <span>{sub.personality_type}</span>}
+              {efc && <span>Contribution {efc} / yr</span>}
               {ts.predicted && <span className="adm-tag">Predicted grades</span>}
             </div>
 
