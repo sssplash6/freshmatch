@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import '../styles/Admin.css'
 import { personality as PERSONALITY_Q } from '../data/questions'
+import { EFC_OPTIONS } from '../data/efc'
 
 const TOKEN_KEY = 'fa-admin-token'
 
@@ -16,6 +17,9 @@ function num(v) {
   const n = parseFloat(String(v ?? '').replace(/[^0-9.]/g, ''))
   return Number.isFinite(n) ? n : null
 }
+
+// Bracket label for a stored EFC cap (15000 -> "$0 – $15,000").
+const efcLabel = v => (v == null ? '' : EFC_OPTIONS.find(o => v <= o.value)?.label || String(v))
 
 // CSV with the same formula-injection guard the server uses.
 function toCsv(rows, cols) {
@@ -79,7 +83,7 @@ function Login({ onAuth }) {
   )
 }
 
-const EXPORT_COLS = ['created_at', 'name', 'email', 'country', 'grade', 'school_name', 'sat', 'gpa', 'gpa_scale', 'ielts', 'majors', 'dream_schools', 'personality_type', 'consent_data', 'consent_offers']
+const EXPORT_COLS = ['created_at', 'name', 'email', 'country', 'grade', 'school_name', 'sat', 'gpa', 'gpa_scale', 'ielts', 'efc', 'majors', 'dream_schools', 'personality_type', 'consent_data', 'consent_offers']
 
 // Render the name of a dream-school entry, which may be a string id or an object.
 const schoolName = s => (typeof s === 'string' ? s : (s?.name || s?.id || ''))
@@ -258,6 +262,7 @@ export default function Admin() {
   const [minSat, setMinSat]   = useState('')
   const [minIelts, setMinIelts] = useState('')
   const [minGpa, setMinGpa]   = useState('')
+  const [maxEfc, setMaxEfc]   = useState('')
   const [sort, setSort]       = useState('newest')
   const [selected, setSelected] = useState(() => new Set())
   const [detailId, setDetailId] = useState(null)
@@ -297,6 +302,7 @@ export default function Admin() {
       if (minS != null && (num(r.sat) ?? -1) < minS) return false
       if (minI != null && (num(r.ielts) ?? -1) < minI) return false
       if (minG != null && (r.gpa4 ?? -1) < minG) return false
+      if (maxEfc && !(r.efc != null && r.efc <= Number(maxEfc))) return false
       if (needle) {
         const hay = `${r.name || ''} ${r.email || ''} ${r.school_name || ''} ${(r.majors || []).join(' ')}`.toLowerCase()
         if (!hay.includes(needle)) return false
@@ -310,7 +316,7 @@ export default function Admin() {
       return String(b.created_at).localeCompare(String(a.created_at)) // newest
     })
     return out
-  }, [rows, q, country, grade, minSat, minIelts, minGpa, sort])
+  }, [rows, q, country, grade, minSat, minIelts, minGpa, maxEfc, sort])
 
   // Acts on selected rows when any are ticked, otherwise the whole filtered set.
   const target = useMemo(
@@ -330,7 +336,7 @@ export default function Admin() {
     })
   }
   function exportCsv() {
-    download('submissions.csv', toCsv(target, EXPORT_COLS), 'text/csv')
+    download('submissions.csv', toCsv(target.map(r => ({ ...r, efc: efcLabel(r.efc) })), EXPORT_COLS), 'text/csv')
   }
   function signOut() { sessionStorage.removeItem(TOKEN_KEY); setToken('') }
 
@@ -383,6 +389,10 @@ export default function Admin() {
         <input className="adm-minsat" type="number" placeholder="Min SAT" value={minSat} onChange={e => setMinSat(e.target.value)} />
         <input className="adm-minsat" type="number" step="0.5" min="0" max="9" placeholder="Min IELTS" value={minIelts} onChange={e => setMinIelts(e.target.value)} />
         <input className="adm-minsat" type="number" step="0.1" min="0" max="4" placeholder="Min GPA /4" title="Out of 4: a 4.5/5 counts as 3.6" value={minGpa} onChange={e => setMinGpa(e.target.value)} />
+        <select value={maxEfc} onChange={e => setMaxEfc(e.target.value)} title="Family contribution per year (EFC), bracket picked in the quiz">
+          <option value="">Any contribution</option>
+          {EFC_OPTIONS.slice(0, -1).map(o => <option key={o.value} value={o.value}>Contribution up to ${o.value.toLocaleString('en-US')}</option>)}
+        </select>
         <select value={sort} onChange={e => setSort(e.target.value)}>
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -412,7 +422,7 @@ export default function Admin() {
             <tr>
               <th className="adm-check"><input type="checkbox" checked={allShownSelected} onChange={toggleAll} aria-label="Select all" /></th>
               <th>Date</th><th>Name</th><th>Email</th><th>Country</th><th>Grade</th>
-              <th>School</th><th>SAT</th><th>GPA</th><th>IELTS</th><th>Majors</th><th>Dream schools</th><th>Type</th><th>Consent</th>
+              <th>School</th><th>SAT</th><th>GPA</th><th>IELTS</th><th>Contribution</th><th>Majors</th><th>Dream schools</th><th>Type</th><th>Consent</th>
             </tr>
           </thead>
           <tbody>
@@ -428,6 +438,7 @@ export default function Admin() {
                 <td>{r.sat || '—'}</td>
                 <td>{r.gpa ? `${r.gpa}${r.gpa_scale && String(r.gpa_scale) !== '4' ? ` / ${r.gpa_scale}` : ''}` : '-'}</td>
                 <td>{r.ielts || '-'}</td>
+                <td className="adm-nowrap">{efcLabel(r.efc) || '-'}</td>
                 <td className="adm-wrap">{(r.majors || []).join(', ') || '—'}</td>
                 <td className="adm-wrap">{(r.dream_schools || []).map(schoolName).filter(Boolean).join(', ') || '—'}</td>
                 <td>{r.personality_type || '—'}</td>
@@ -440,7 +451,7 @@ export default function Admin() {
               </tr>
             ))}
             {status === 'done' && filtered.length === 0 && (
-              <tr><td colSpan="14" className="adm-empty">No applicants match these filters.</td></tr>
+              <tr><td colSpan="15" className="adm-empty">No applicants match these filters.</td></tr>
             )}
           </tbody>
         </table>

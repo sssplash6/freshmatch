@@ -1,13 +1,5 @@
 import '../styles/EfcSlide.css'
-
-const OPTIONS = [
-  { label: '$0 – $15,000',      value: 15000  },
-  { label: '$15,001 – $25,000', value: 25000  },
-  { label: '$25,001 – $40,000', value: 40000  },
-  { label: '$40,001 – $60,000', value: 60000  },
-  { label: '$60,001 – $80,000', value: 80000  },
-  { label: '$80,001+',          value: 999999 },
-]
+import { EFC_OPTIONS as OPTIONS } from '../data/efc'
 
 export default function EfcSlide({ efc, onUpdate, consentData, consentOffers, onConsent, sectionLabel, counter, onNext, onBack }) {
   const canContinue = efc !== null && consentData
